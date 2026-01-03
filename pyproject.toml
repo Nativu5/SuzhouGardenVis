@@ -12,4 +12,5 @@ dependencies = [
     "jsonschema>=4.25.1",
     "tqdm>=4.66.0",
     "pandas>=2.3.3",
+    "pillow>=12.1.0",
 ]
