@@ -75,7 +75,8 @@ class MainController {
         
         // 初始化数据管理器
         if (typeof DataManager !== 'undefined') {
-            this.dataManager = new DataManager();
+            this.dataManager = window.dataManager || new DataManager();
+            window.dataManager = this.dataManager;
             console.log('✓ 数据管理模块已初始化');
         } else {
             throw new Error('DataManager 模块未找到');
@@ -83,7 +84,8 @@ class MainController {
         
         // 初始化图表管理器
         if (typeof ChartManager !== 'undefined') {
-            this.chartManager = new ChartManager();
+            this.chartManager = window.chartManager || new ChartManager();
+            window.chartManager = this.chartManager;
             console.log('✓ 图表管理模块已初始化');
         } else {
             throw new Error('ChartManager 模块未找到');
@@ -91,7 +93,8 @@ class MainController {
         
         // 初始化交互控制器
         if (typeof InteractionController !== 'undefined') {
-            this.interactionController = new InteractionController();
+            this.interactionController = window.interactionController || new InteractionController();
+            window.interactionController = this.interactionController;
             console.log('✓ 交互控制模块已初始化');
         } else {
             throw new Error('InteractionController 模块未找到');

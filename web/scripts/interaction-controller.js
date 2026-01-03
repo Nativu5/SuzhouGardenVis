@@ -315,11 +315,11 @@ class InteractionController {
      * @param {Array} data - 数据
      */
     highlightEraElements(chart, data) {
-        const eraCounts = d3.rollup(data, v => v.length, d => d.eraCategory || '未知');
+        const eraSet = new Set(data.map(d => d.eraCategory || '未知'));
         
-        chart.svg.selectAll('.bar')
-            .style('opacity', d => eraCounts.has(d.era) ? 1 : 0.3)
-            .classed('highlighted', d => eraCounts.has(d.era));
+        chart.svg.selectAll('.era-segment')
+            .style('opacity', d => eraSet.has(d.data.era) ? 1 : 0.15)
+            .classed('highlighted', d => eraSet.has(d.data.era));
     }
 
     /**

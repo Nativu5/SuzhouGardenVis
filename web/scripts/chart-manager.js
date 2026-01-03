@@ -386,28 +386,66 @@ class ChartManager {
     createEraChart(data) {
         const containerId = '#era-chart';
         const container = d3.select(containerId);
+
+        if (!container.node()) {
+            console.error('Era chart container not found:', containerId);
+            return;
+        }
+
         container.selectAll('*').remove();
 
-        // 统计数据
-        const eraCounts = d3.rollup(data, v => v.length, d => d.eraCategory || '未知');
-        const chartData = Array.from(eraCounts, ([era, count]) => ({ era, count }))
-            .sort((a, b) => {
-                // 定义朝代顺序
-                const eraOrder = ['春秋', '战国', '秦', '汉', '三国', '晋', '南北朝', '隋', '唐', '五代', '宋', '元', '明', '清', '民国', '现代', '未知'];
-                const aIndex = eraOrder.indexOf(a.era);
-                const bIndex = eraOrder.indexOf(b.era);
-                if (aIndex === -1 && bIndex === -1) return a.era.localeCompare(b.era);
-                if (aIndex === -1) return 1;
-                if (bIndex === -1) return -1;
-                return aIndex - bIndex;
-            });
+        const eraOrder = ['元代及以前', '明代', '清代', '民国', '现代', '未知'];
+        const baseProtectionLevels = ['全国', '省级', '市级', '县级', '无'];
 
-        // 设置尺寸
+        // 分组统计：每个历史时期下不同保护级别的数量
+        const eraProtection = d3.rollup(
+            data,
+            v => d3.rollup(v, vv => vv.length, d => d.protectionLevel || '无'),
+            d => d.eraCategory || '未知'
+        );
+
+        // 收集所有出现的保护级别，避免遗漏自定义标记
+        const extraLevels = new Set();
+        eraProtection.forEach(levelMap => {
+            levelMap.forEach((_, level) => {
+                if (!baseProtectionLevels.includes(level)) {
+                    extraLevels.add(level || '其他');
+                }
+            });
+        });
+        const stackKeys = [...baseProtectionLevels, ...extraLevels];
+
+        // 确定历史时期顺序（优先预设顺序，再追加其他出现的时期）
+        const erasInData = Array.from(eraProtection.keys());
+        const orderedEras = [
+            ...eraOrder.filter(era => erasInData.includes(era)),
+            ...erasInData.filter(era => !eraOrder.includes(era))
+        ];
+
+        const chartData = orderedEras.map(era => {
+            const levelMap = eraProtection.get(era) || new Map();
+            const row = { era, total: 0 };
+            stackKeys.forEach(level => {
+                const count = levelMap.get(level) ??
+                    (level === '其他' ? (levelMap.get('') || 0) : 0);
+                row[level] = count;
+                row.total += count;
+            });
+            return row;
+        }).filter(d => d.total > 0);
+
+        if (!chartData.length) {
+            container.append('div')
+                .style('text-align', 'center')
+                .style('color', '#666')
+                .text('暂无年代与保护级别数据');
+            return;
+        }
+
         const containerRect = container.node().getBoundingClientRect();
         const width = containerRect.width - this.margins.left - this.margins.right;
-        const height = 300 - this.margins.top - this.margins.bottom;
+        const height = 360 - this.margins.top - this.margins.bottom;
 
-        // 创建SVG
         const svg = container.append('svg')
             .attr('width', width + this.margins.left + this.margins.right)
             .attr('height', height + this.margins.top + this.margins.bottom);
@@ -415,25 +453,22 @@ class ChartManager {
         const g = svg.append('g')
             .attr('transform', `translate(${this.margins.left},${this.margins.top})`);
 
-        // 创建比例尺
         const xScale = d3.scaleBand()
             .domain(chartData.map(d => d.era))
             .range([0, width])
-            .padding(0.2);
+            .padding(0.25);
 
         const yScale = d3.scaleLinear()
-            .domain([0, d3.max(chartData, d => d.count)])
+            .domain([0, d3.max(chartData, d => d.total)])
+            .nice()
             .range([height, 0]);
 
-        // 创建坐标轴
         g.append('g')
             .attr('class', 'x-axis')
             .attr('transform', `translate(0,${height})`)
             .call(d3.axisBottom(xScale))
             .selectAll('text')
-            .style('font-size', '11px')
-            .attr('transform', 'rotate(-45)')
-            .style('text-anchor', 'end');
+            .style('font-size', '11px');
 
         g.append('g')
             .attr('class', 'y-axis')
@@ -441,48 +476,82 @@ class ChartManager {
             .selectAll('text')
             .style('font-size', '12px');
 
-        // 添加网格线
         g.append('g')
             .attr('class', 'grid')
-            .call(d3.axisLeft(yScale).tickSize(-width).tickFormat(''));
+            .call(d3.axisLeft(yScale).tickSize(-width).tickFormat(''))
+            .style('stroke-dasharray', '3,3')
+            .style('opacity', 0.25);
 
-        // 创建柱状图
-        const bars = g.selectAll('.bar')
-            .data(chartData)
+        const stack = d3.stack().keys(stackKeys);
+        const stackedData = stack(chartData);
+
+        const layers = g.selectAll('.layer')
+            .data(stackedData)
+            .enter().append('g')
+            .attr('class', 'layer')
+            .attr('fill', d => this.colorSchemes.protection[d.key] || '#95a5a6');
+
+        const bars = layers.selectAll('rect')
+            .data(d => d)
             .enter().append('rect')
-            .attr('class', 'bar')
-            .attr('x', d => xScale(d.era))
+            .attr('class', 'bar era-segment')
+            .attr('x', d => xScale(d.data.era))
             .attr('width', xScale.bandwidth())
-            .attr('y', height)
+            .attr('y', yScale(0))
             .attr('height', 0)
-            .attr('fill', (d, i) => this.colorSchemes.primary[i % this.colorSchemes.primary.length])
             .style('cursor', 'pointer');
 
-        // 添加动画
         bars.transition()
-            .duration(800)
-            .delay((d, i) => i * 100)
-            .attr('y', d => yScale(d.count))
-            .attr('height', d => height - yScale(d.count));
+            .duration(900)
+            .delay((d, i) => i * 40)
+            .attr('y', d => yScale(d[1]))
+            .attr('height', d => yScale(d[0]) - yScale(d[1]));
 
-        // 添加数值标签
-        g.selectAll('.bar-label')
+        // 每个柱子的总数标签
+        g.selectAll('.total-label')
             .data(chartData)
             .enter().append('text')
-            .attr('class', 'bar-label')
+            .attr('class', 'total-label')
             .attr('x', d => xScale(d.era) + xScale.bandwidth() / 2)
-            .attr('y', d => yScale(d.count) - 5)
+            .attr('y', d => yScale(d.total) - 6)
             .attr('text-anchor', 'middle')
             .style('font-size', '12px')
             .style('font-weight', 'bold')
-            .style('fill', '#333')
-            .text(d => d.count);
+            .style('fill', '#2c3e50')
+            .text(d => d.total);
 
-        // 添加交互
-        this.addTooltip(bars, d => `${d.era}: ${d.count}个园林`);
+        // 图例
+        const legend = svg.append('g')
+            .attr('class', 'legend')
+            .attr('transform', `translate(${width - 40}, ${this.margins.top})`);
+
+        const legendItems = legend.selectAll('.legend-item')
+            .data(stackKeys)
+            .enter().append('g')
+            .attr('class', 'legend-item')
+            .attr('transform', (d, i) => `translate(-10, ${i * 22})`);
+
+        legendItems.append('rect')
+            .attr('width', 14)
+            .attr('height', 14)
+            .attr('rx', 2)
+            .attr('fill', d => this.colorSchemes.protection[d] || '#95a5a6');
+
+        legendItems.append('text')
+            .attr('x', 20)
+            .attr('y', 10)
+            .style('font-size', '12px')
+            .text(d => d);
+
+        this.addTooltip(bars, (d, event) => {
+            const level = d3.select(event.currentTarget.parentNode).datum().key;
+            const count = d.data[level];
+            const percent = d.data.total ? ((count / d.data.total) * 100).toFixed(1) : '0.0';
+            return `${d.data.era} · ${level}<br/>数量：${count} 个<br/>占该时期比例：${percent}%`;
+        });
         this.addClickHandler(bars, 'era');
 
-        this.charts.era = { svg, data: chartData, type: 'bar' };
+        this.charts.era = { svg, data: chartData, type: 'stackedBar', keys: stackKeys };
     }
 
     /**
@@ -739,10 +808,11 @@ class ChartManager {
             .text(d => d);
 
         // 添加交互
-        this.addTooltip(bars, d => {
-            const level = d3.select(d.target.parentNode).datum().key;
+        this.addTooltip(bars, (d, event) => {
+            const level = d3.select(event.currentTarget.parentNode).datum().key;
             const count = d.data[level];
-            return `${d.data.district} - ${level}: ${count}个园林`;
+            const percent = d.data.total ? ((count / d.data.total) * 100).toFixed(1) : '0.0';
+            return `${d.data.district} - ${level}<br/>数量：${count}个园林<br/>占该区比例：${percent}%`;
         });
 
         this.charts.districtProtection = { svg, data: chartData, type: 'stackedBar' };
@@ -754,25 +824,29 @@ class ChartManager {
      * @param {Function} contentFn - 内容生成函数
      */
     addTooltip(selection, contentFn) {
-        const tooltip = d3.select('body').append('div')
-            .attr('class', 'tooltip')
-            .style('position', 'absolute')
-            .style('padding', '10px')
-            .style('background', 'rgba(0, 0, 0, 0.8)')
-            .style('color', 'white')
-            .style('border-radius', '5px')
-            .style('pointer-events', 'none')
-            .style('opacity', 0);
+        let tooltip = d3.select('#tooltip');
+        if (tooltip.empty()) {
+            tooltip = d3.select('body').append('div')
+                .attr('id', 'tooltip')
+                .attr('class', 'tooltip');
+        }
 
         selection
-            .on('mouseover', function(event, d) {
-                tooltip.transition().duration(200).style('opacity', 1);
-                tooltip.html(contentFn(d))
-                    .style('left', (event.pageX + 10) + 'px')
-                    .style('top', (event.pageY - 10) + 'px');
+            .on('mouseover', (event, d) => {
+                tooltip.html(contentFn(d, event))
+                    .style('left', (event.pageX + 12) + 'px')
+                    .style('top', (event.pageY - 12) + 'px')
+                    .classed('visible', true);
             })
-            .on('mouseout', function() {
-                tooltip.transition().duration(200).style('opacity', 0);
+            .on('mousemove', (event, d) => {
+                tooltip
+                    .style('left', (event.pageX + 12) + 'px')
+                    .style('top', (event.pageY - 12) + 'px')
+                    .classed('visible', true)
+                    .html(contentFn(d, event));
+            })
+            .on('mouseout', () => {
+                tooltip.classed('visible', false);
             });
     }
 
@@ -796,6 +870,23 @@ class ChartManager {
         this.data = newData;
         // 重新初始化所有图表
         this.initializeAllCharts(newData);
+    }
+
+    /**
+     * 响应筛选数据更新图表（与主控兼容）
+     * @param {Array} newData - 新数据
+     */
+    updateChartsWithFilteredData(newData) {
+        this.updateCharts(newData);
+    }
+
+    /**
+     * 重新调整图表尺寸
+     */
+    resizeAllCharts() {
+        if (this.data && this.data.length) {
+            this.initializeAllCharts(this.data);
+        }
     }
 
     /**
@@ -836,4 +927,4 @@ class ChartManager {
     }
 }
 
-window.chartManager = new ChartManager();
+window.chartManager = window.chartManager || new ChartManager();
