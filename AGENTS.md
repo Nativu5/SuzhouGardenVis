@@ -25,7 +25,7 @@
 
 - 在 zsh 中使用 "setp" 这个命令可以设置代理环境变量（在 .zshrc 中已经配置好）。
 - 当前目录中可以使用 uv 管理当前 Python 版本和虚拟环境(.venv/bin/activate)。
-- 当前环境中已经安装好 npm，如需安装软件请直接要求用户协助。
+- 当前环境中已经安装好 npm，如需启动服务器、运行构建或安装新 Package，必须要求用户协助。
 - 由于开发服务器运行可能导致终端阻塞，如有测试需求，请直接要求用户自行启动测试。
 
 ---
@@ -84,37 +84,40 @@
 
 ---
 
-### 里程碑 2：基础布局与 UI 框架
+### 里程碑 2：基础布局与 UI 框架 ✅
 **目标**：实现三栏式布局框架，建立模式切换机制
 
 **任务清单**：
-- [ ] 设计并实现顶部导航栏组件（HeaderNav.vue）
+- [x] 设计并实现顶部导航栏组件（HeaderNav.vue）
   - 项目标题
   - 模式切换按钮（概览/探索）
-- [ ] 实现三栏式布局容器（MainLayout.vue）
-  - 左侧操作区（宽度约 280-320px）
+- [x] 实现三栏式布局容器（MainLayout.vue）
+  - 左侧操作区（宽度 320px）
   - 中间主视图（flex-1）
-  - 右侧详情区（宽度约 360-400px，仅探索模式显示）
-- [ ] 实现左侧操作区框架（LeftPanel.vue）
+  - 右侧详情区（宽度 384px，仅探索模式显示）
+- [x] 实现左侧操作区框架（LeftPanel.vue）
   - 概览模式：叙事场景选择器 + 场景筛选器容器
   - 探索模式：搜索框 + 多维筛选器容器
-- [ ] 实现中间主视图容器（MainView.vue）
+- [x] 实现中间主视图容器（MainView.vue）
   - 概览模式：图表网格容器
   - 探索模式：地图容器
-- [ ] 实现右侧详情区框架（RightPanel.vue，仅探索模式）
+- [x] 实现右侧详情区框架（RightPanel.vue，仅探索模式）
   - 空状态提示
   - 区域统计视图
   - 园林详情视图
-- [ ] 实现模式切换逻辑
+- [x] 实现模式切换逻辑
   - Store 中的 viewMode 状态管理
   - 切换时保留筛选条件
   - UI 响应模式切换
-- [ ] 实现响应式布局样式（桌面端优先）
+- [x] 实现响应式布局样式（桌面端优先）
+- [x] 修复类型系统（将 enum 改为 type 联合类型以兼容 erasableSyntaxOnly）
 
 **交付物**：
-- 完整的三栏式布局框架
-- 可切换的概览/探索模式
-- 基础 UI 组件库结构
+- ✅ 完整的三栏式布局框架
+- ✅ 可切换的概览/探索模式
+- ✅ 基础 UI 组件库结构（HeaderNav、LeftPanel、MainView、RightPanel、MainLayout）
+- ✅ 模式切换动画与状态管理
+- ✅ 构建验证通过
 
 ---
 
@@ -355,62 +358,18 @@
 **已完成**：
 - 里程碑 0 - 前期准备与环境配置 ✅
 - 里程碑 1 - 数据层与类型系统 ✅
+- 里程碑 2 - 基础布局与 UI 框架 ✅
 
-**当前进度**：准备开始里程碑 2 - 基础布局与 UI 框架
-**下一步**：设计并实现顶部导航栏和三栏式布局容器
+**当前进度**：准备开始里程碑 3 - 概览模式叙事场景与图表
+**下一步**：实现通用图表组件和第一个叙事场景（空间集中与遗产核心）
 
-### 里程碑 0 完成总结
+### 已完成工作简要总结
 
-已成功完成以下工作：
+**里程碑 0：**
+已完成 Vue3+Vite+TS 项目初始化，集成 Tailwind CSS、Pinia、ECharts、AMap 和 PapaParse 等核心依赖。配置了环境变量、路径别名及 Tailwind 主题色，确保开发环境与基础设施就绪。
 
-1. **依赖安装**：
-   - 核心框架：Vue 3.5.24, Vite 7.2.4, TypeScript 5.9.3
-   - 样式工具：Tailwind CSS 4.1.18, PostCSS, Autoprefixer
-   - 状态管理：Pinia 3.0.4
-   - 可视化：ECharts 6.0.0
-   - 地图集成：@amap/amap-jsapi-loader 1.0.1
-   - 数据解析：PapaParse 5.5.3（含类型定义）
+**里程碑 1：**
+建立了完整的 TypeScript 类型系统（含 GardenData、Filters 等），实现了 CSV 数据加载、清洗与派生字段计算服务。搭建了 Pinia Store 管理数据状态、筛选逻辑与视图模式，并成功验证了 108 条园林数据的正确加载与统计指标计算。
 
-2. **配置文件**：
-   - ✅ tailwind.config.js：Tailwind CSS 配置（含苏州园林主题色）
-   - ✅ postcss.config.js：PostCSS 配置
-   - ✅ .env：环境变量文件（含 VITE_AMAP_KEY）
-   - ✅ .env.example：环境变量模板
-   - ✅ vite.config.ts：路径别名 @ -> src
-   - ✅ tsconfig.app.json：TypeScript 路径映射
-
-3. **项目基础设施**：
-   - ✅ 三栏式布局准备就绪
-   - ✅ Tailwind CSS 已集成到 src/style.css
-   - ✅ 开发环境配置完成
-
-### 里程碑 1 完成总结
-
-已成功完成以下工作：
-
-1. **TypeScript 类型系统**：
-   - ✅ GardenData 接口（原始数据 + 派生字段）
-   - ✅ Filters 接口（多维筛选条件）
-   - ✅ ViewMode、NarrativeScene 枚举
-   - ✅ Statistics、SelectionState 等辅助类型
-   - ✅ 图表数据类型（ChartDataItem、StackedBarDataItem、SankeyData）
-
-2. **数据加载服务** (src/services/dataLoader.ts)：
-   - ✅ CSV 文件加载与解析（PapaParse）
-   - ✅ 数据清洗函数（面积数值化、文保级别空值处理、世界遗产布尔转换）
-   - ✅ 派生字段计算（年代分类、面积区间）
-   - ✅ 辅助函数（获取唯一值列表）
-
-3. **Pinia Store 状态管理** (src/stores/gardenStore.ts)：
-   - ✅ 原始数据存储 (rawData)
-   - ✅ 过滤后数据计算 (filteredData computed)
-   - ✅ 统计指标计算 (statistics computed)
-   - ✅ 多维筛选逻辑（9 种筛选维度）
-   - ✅ 视图模式切换 (viewMode)
-   - ✅ 选中状态管理 (selection)
-
-4. **数据验证**：
-   - ✅ 成功加载 108 条园林记录
-   - ✅ 派生字段正确计算（年代分类、面积区间）
-   - ✅ 统计指标正常显示（总数、开放率、世界遗产数等）
-   - ✅ 测试页面可视化展示数据
+**里程碑 2：**
+实现了完整的三栏式响应式布局框架，包括顶部导航栏（HeaderNav）、左侧操作区（LeftPanel）、中间主视图（MainView）、右侧详情区（RightPanel）和主布局容器（MainLayout）。成功实现了概览/探索模式的切换机制，包括状态管理、UI响应和切换动画。修复了类型系统问题（将enum改为type联合类型），构建验证通过。左侧面板根据模式显示不同内容（概览模式：叙事场景选择器；探索模式：搜索框），右侧详情区仅在探索模式显示并带有平滑过渡动画。

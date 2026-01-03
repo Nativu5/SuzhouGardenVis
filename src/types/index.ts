@@ -53,25 +53,21 @@ export interface GardenData {
   areaRange: string // 面积区间（如"0-1000"、"1000-5000"等）
 }
 
-// ==================== 枚举与常量 ====================
+// ==================== 类型与常量 ====================
 
 /**
  * 视图模式
  */
-export enum ViewMode {
-  OVERVIEW = 'overview', // 概览模式
-  EXPLORE = 'explore' // 探索模式
-}
+export type ViewMode = 'overview' | 'explore'
 
 /**
  * 叙事场景
  */
-export enum NarrativeScene {
-  SPATIAL_HERITAGE = 'spatial_heritage', // 空间集中与遗产核心
-  HISTORICAL_TIMELINE = 'historical_timeline', // 历史谱系与认定节奏
-  ACCESSIBILITY = 'accessibility', // 开放可达与权属/用途
-  SCALE_STRUCTURE = 'scale_structure' // 规模结构与资源配置
-}
+export type NarrativeScene =
+  | 'spatial_heritage' // 空间集中与遗产核心
+  | 'historical_rhythm' // 历史谱系与认定节奏
+  | 'accessibility_ownership' // 开放可达与权属/用途
+  | 'scale_resources' // 规模结构与资源配置
 
 /**
  * 叙事场景配置
@@ -84,24 +80,14 @@ export interface NarrativeSceneConfig {
 }
 
 /**
- * 开放情况枚举
+ * 开放情况
  */
-export enum OpenStatus {
-  OPEN = '开放',
-  NOT_OPEN = '未开放',
-  PARTIALLY_OPEN = '部分开放'
-}
+export type OpenStatus = '开放' | '未开放' | '部分开放'
 
 /**
- * 文保单位级别枚举
+ * 文保单位级别
  */
-export enum HeritageLevel {
-  NATIONAL = '全国',
-  PROVINCIAL = '省级',
-  MUNICIPAL = '市级',
-  DISTRICT = '区级',
-  UNRATED = '未定级'
-}
+export type HeritageLevel = '全国' | '省级' | '市级' | '区级' | '未定级'
 
 // ==================== 筛选条件 ====================
 
