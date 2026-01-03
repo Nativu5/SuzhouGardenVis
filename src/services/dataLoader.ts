@@ -9,15 +9,16 @@ import type { GardenRawData, GardenData, AreaRangeConfig, EraCategoryConfig } fr
 
 /**
  * 年代分类配置
+ * 基于实际数据的精确匹配（数据集中共有：春秋1、汉1、南朝1、南北朝2、宋6、元1、明16、清52、民国9、现代19）
  */
 const ERA_CATEGORIES: EraCategoryConfig[] = [
-  { label: '宋代及以前', keywords: ['宋', '唐', '南北朝', '汉', '秦'] },
-  { label: '元代', keywords: ['元'] },
-  { label: '明代', keywords: ['明'] },
-  { label: '清代', keywords: ['清'] },
-  { label: '民国', keywords: ['民国'] },
-  { label: '现代', keywords: ['1949', '1950', '现代', '当代'] },
-  { label: '不详', keywords: [] } // 兜底分类
+  { label: '宋代及以前', keywords: ['春秋', '汉', '南朝', '南北朝', '宋'] }, // 共11个
+  { label: '元代', keywords: ['元'] }, // 共1个
+  { label: '明代', keywords: ['明'] }, // 共16个
+  { label: '清代', keywords: ['清'] }, // 共52个
+  { label: '民国', keywords: ['民国'] }, // 共9个
+  { label: '现代', keywords: ['现代'] }, // 共19个
+  { label: '未知', keywords: [] } // 兜底分类
 ]
 
 /**
@@ -49,12 +50,56 @@ function cleanArea(areaStr: string): number {
 
 /**
  * 清洗文保单位级别：空值归为"未定级"
+ * 基于实际数据：全国(26)、省级(15)、市级(19)、县级(2)、空值(45)
  */
 function cleanHeritageLevel(level: string): string {
   if (!level || level.trim() === '' || level === 'null' || level === 'undefined') {
     return '未定级'
   }
+
   return level.trim()
+}
+
+/**
+ * 清洗权属性质：归一化
+ * 基于实际数据：国有(83)、私有(10)、私人(7)、企业(4)、宗教产(4)
+ * 归一化规则：私人 → 私有
+ */
+function cleanOwnershipType(type: string): string {
+  if (!type || type.trim() === '') {
+    return '未知'
+  }
+
+  const normalized = type.trim()
+
+  // 归一化映射
+  const mapping: Record<string, string> = {
+    '私人': '私有',
+    '私有': '私有'
+  }
+
+  return mapping[normalized] || normalized
+}
+
+/**
+ * 清洗当前用途：归一化
+ * 基于实际数据：游览服务(71)、单位使用(13)、私人(13)、民宿酒店(4)、空置(3)、宗教场所(3)、旅游景点(1)
+ * 归一化规则：旅游景点 → 游览服务
+ */
+function cleanCurrentUse(use: string): string {
+  if (!use || use.trim() === '') {
+    return '未知'
+  }
+
+  const normalized = use.trim()
+
+  // 归一化映射
+  const mapping: Record<string, string> = {
+    '旅游景点': '游览服务',
+    '游览服务': '游览服务'
+  }
+
+  return mapping[normalized] || normalized
 }
 
 /**
@@ -80,21 +125,25 @@ function cleanCoordinate(coord: string): number {
  */
 function calculateEraCategory(constructionPeriod: string): string {
   if (!constructionPeriod || constructionPeriod.trim() === '') {
-    return '不详'
+    return '未知'
   }
 
-  // 遍历年代分类配置，查找匹配的关键词
+  const normalized = constructionPeriod.trim()
+
+  // 精确匹配年代分类（基于实际数据）
   for (const config of ERA_CATEGORIES) {
     if (config.keywords.length === 0) continue // 跳过兜底分类
 
     for (const keyword of config.keywords) {
-      if (constructionPeriod.includes(keyword)) {
+      if (normalized === keyword) {
         return config.label
       }
     }
   }
 
-  return '不详'
+  // 如果没有匹配到，记录警告并返回未知
+  console.warn(`⚠️  未识别的建造年代: "${normalized}"`)
+  return '未知'
 }
 
 /**
@@ -127,11 +176,11 @@ function transformGardenData(raw: GardenRawData): GardenData {
     address: raw.地址?.trim() || '',
     constructionPeriod,
     area,
-    ownershipType: raw.权属性质?.trim() || '',
+    ownershipType: cleanOwnershipType(raw.权属性质),
     managementUnit: raw.管理单位?.trim() || '',
     protectionStatus: raw.保护状况?.trim() || '',
     openStatus: raw.开放情况?.trim() || '',
-    currentUse: raw.当前用途?.trim() || '',
+    currentUse: cleanCurrentUse(raw.当前用途),
     description: raw.描述?.trim() || '',
     longitude: cleanCoordinate(raw.经度),
     latitude: cleanCoordinate(raw.纬度),

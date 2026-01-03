@@ -6,77 +6,57 @@
 <script setup lang="ts">
 import { useGardenStore } from '@/stores/gardenStore'
 import { computed } from 'vue'
-import type { NarrativeScene } from '@/types'
+import NarrativeSelector from '@/components/overview/NarrativeSelector.vue'
+import MetricCard from '@/components/overview/MetricCard.vue'
 
 const gardenStore = useGardenStore()
 
 // 判断是否为概览模式
 const isOverviewMode = computed(() => gardenStore.viewMode === 'overview')
 
-// 叙事场景选项
-const narrativeOptions: Array<{ value: NarrativeScene; label: string }> = [
-  { value: 'spatial_heritage', label: '空间集中与遗产核心' },
-  { value: 'historical_rhythm', label: '历史谱系与认定节奏' },
-  { value: 'accessibility_ownership', label: '开放可达与权属/用途' },
-  { value: 'scale_resources', label: '规模结构与资源配置' }
-]
-
-// 当前叙事场景的标签
-const currentNarrativeLabel = computed(() => {
-  const option = narrativeOptions.find(opt => opt.value === gardenStore.overviewNarrative)
-  return option?.label || ''
-})
-
-// 处理叙事场景切换
-const handleNarrativeChange = (event: Event) => {
-  const value = (event.target as HTMLSelectElement).value as NarrativeScene
-  gardenStore.setOverviewNarrative(value)
-}
+// 统计指标
+const stats = computed(() => gardenStore.statistics)
 </script>
 
 <template>
   <aside class="w-80 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
     <!-- 概览模式 -->
-    <div v-if="isOverviewMode" class="flex-1 flex flex-col p-6 space-y-6">
+    <div v-if="isOverviewMode" class="flex-1 flex flex-col p-6 space-y-6 overflow-y-auto">
       <!-- 叙事场景选择器 -->
-      <div class="space-y-2">
-        <label class="block text-sm font-semibold text-gray-700">
-          叙事场景
-        </label>
-        <select
-          :value="gardenStore.overviewNarrative"
-          @change="handleNarrativeChange"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-        >
-          <option
-            v-for="option in narrativeOptions"
-            :key="option.value"
-            :value="option.value"
-          >
-            {{ option.label }}
-          </option>
-        </select>
-      </div>
+      <NarrativeSelector />
 
-      <!-- 场景说明 -->
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p class="text-sm text-blue-800 leading-relaxed">
-          <span class="font-semibold">{{ currentNarrativeLabel }}</span>
-        </p>
-        <p class="text-xs text-blue-600 mt-2">
-          使用下方的筛选器可以进一步细化当前场景的数据展示
-        </p>
-      </div>
-
-      <!-- 场景筛选器容器（占位） -->
-      <div class="flex-1 overflow-y-auto">
-        <div class="space-y-4">
-          <div class="text-sm text-gray-500 text-center py-8">
-            场景专用筛选器
-            <br />
-            （后续里程碑实现）
-          </div>
+      <!-- 整体统计指标 -->
+      <div class="space-y-3">
+        <h3 class="text-sm font-semibold text-gray-700">整体概况</h3>
+        <div class="grid grid-cols-2 gap-3">
+          <MetricCard
+            title="园林总数"
+            :value="stats.totalCount"
+            unit="座"
+          />
+          <MetricCard
+            title="开放园林"
+            :value="stats.openCount"
+            unit="座"
+          />
+          <MetricCard
+            title="开放率"
+            :value="stats.openRate.toFixed(1)"
+            unit="%"
+          />
+          <MetricCard
+            title="世界遗产"
+            :value="stats.worldHeritageCount"
+            unit="座"
+          />
         </div>
+      </div>
+
+      <!-- 提示信息 -->
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <p class="text-xs text-blue-700 leading-relaxed">
+          在概览模式下，您可以通过叙事场景切换来查看不同维度的数据洞察。
+        </p>
       </div>
     </div>
 

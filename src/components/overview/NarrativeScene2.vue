@@ -1,0 +1,232 @@
+<script setup lang="ts">
+/**
+ * 叙事场景2：历史谱系与认定节奏
+ * 展示建设时期结构与认定批次的关系，观察不同年代的保护级别分布
+ */
+
+import { computed } from 'vue'
+import { useGardenStore } from '@/stores/gardenStore'
+import StackedBarChart from '@/components/charts/StackedBarChart.vue'
+import BarChart from '@/components/charts/BarChart.vue'
+import MetricCard from './MetricCard.vue'
+import {
+  groupByEraCategory,
+  groupByEraCategoryAndHeritageLevel,
+  groupByBatchAndEraCategory
+} from '@/utils/chartDataProcessor'
+import {
+  getEraCategoryColor,
+  getHeritageLevelColor
+} from '@/config/theme'
+
+const store = useGardenStore()
+
+// 使用过滤后的数据
+const data = computed(() => store.filteredData)
+
+// 早期年代园林（明代及以前）
+const earlyGardens = computed(() => {
+  return data.value
+    .filter(item => item.eraCategory === '明代以前' || item.eraCategory === '明代')
+    .sort((a, b) => a.constructionPeriod.localeCompare(b.constructionPeriod))
+})
+
+// 按建造年代统计
+const gardenByEra = computed(() => {
+  const result = groupByEraCategory(data.value)
+  return {
+    data: result,
+    colors: result.map(item => getEraCategoryColor(item.name))
+  }
+})
+
+// 按建造年代×文保级别分层统计
+const eraHeritageData = computed(() => {
+  const result = groupByEraCategoryAndHeritageLevel(data.value)
+  return {
+    categories: result.categories,
+    series: result.series.map(s => ({
+      ...s,
+      color: getHeritageLevelColor(s.name)
+    }))
+  }
+})
+
+// 按公布批次×建造年代分层统计
+const batchEraData = computed(() => {
+  const result = groupByBatchAndEraCategory(data.value)
+  return {
+    categories: result.categories,
+    series: result.series.map(s => ({
+      ...s,
+      color: getEraCategoryColor(s.name)
+    }))
+  }
+})
+
+// KPI 指标
+const metrics = computed(() => {
+  const totalCount = data.value.length
+  const earlyCount = earlyGardens.value.length
+  const oldestGarden = data.value.reduce((oldest, current) => {
+    if (!oldest || current.constructionPeriod < oldest.constructionPeriod) {
+      return current
+    }
+    return oldest
+  }, data.value[0])
+
+  const batchCount = new Set(data.value.map(item => item.publicationBatch)).size
+
+  return {
+    totalCount,
+    earlyCount,
+    oldestGarden: oldestGarden ? `${oldestGarden.name} (${oldestGarden.constructionPeriod})` : '-',
+    batchCount
+  }
+})
+</script>
+
+<template>
+  <div class="narrative-scene-2 p-6">
+    <!-- 场景标题与说明 -->
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-gray-900 mb-2">
+        历史谱系与认定节奏
+      </h2>
+      <p class="text-gray-600">
+        展示建设时期结构与认定批次的关系，观察不同年代的保护级别分布
+      </p>
+    </div>
+
+    <!-- KPI 指标卡 -->
+    <div class="grid grid-cols-4 gap-4 mb-6">
+      <MetricCard
+        title="园林总数"
+        :value="metrics.totalCount"
+        unit="座"
+      />
+      <MetricCard
+        title="早期园林"
+        :value="metrics.earlyCount"
+        unit="座"
+        description="明代及以前"
+      />
+      <MetricCard
+        title="最早园林"
+        :value="metrics.oldestGarden"
+      />
+      <MetricCard
+        title="公布批次数"
+        :value="metrics.batchCount"
+        unit="批"
+      />
+    </div>
+
+    <!-- 图表网格 -->
+    <div class="grid grid-cols-2 gap-6 mb-6">
+      <!-- 建设时期数量柱状图 -->
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <BarChart
+          title="建设时期数量分布"
+          :data="gardenByEra.data"
+          :colors="gardenByEra.colors"
+          x-axis-name="建造年代"
+          y-axis-name="园林数量"
+          height="400px"
+        />
+      </div>
+
+      <!-- 建造年代×文保单位级别分层柱状图 -->
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <StackedBarChart
+          title="建造年代×文保单位级别"
+          :categories="eraHeritageData.categories"
+          :series="eraHeritageData.series"
+          x-axis-name="建造年代"
+          y-axis-name="园林数量"
+          height="400px"
+        />
+      </div>
+
+      <!-- 公布批次×建造年代分层柱状图 -->
+      <div class="bg-white rounded-lg border border-gray-200 p-4 col-span-2">
+        <StackedBarChart
+          title="公布批次×建造年代"
+          :categories="batchEraData.categories"
+          :series="batchEraData.series"
+          x-axis-name="公布批次"
+          y-axis-name="园林数量"
+          height="400px"
+        />
+      </div>
+    </div>
+
+    <!-- 早期年代园林清单表格 -->
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">
+        早期年代园林清单（明代及以前）
+      </h3>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                名称
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                建造年代
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                年代分类
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                文保级别
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                公布批次
+              </th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                区县
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr
+              v-for="garden in earlyGardens"
+              :key="garden.name"
+              class="hover:bg-gray-50"
+            >
+              <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                {{ garden.name }}
+              </td>
+              <td class="px-4 py-3 text-sm text-gray-600">
+                {{ garden.constructionPeriod }}
+              </td>
+              <td class="px-4 py-3 text-sm text-gray-600">
+                {{ garden.eraCategory }}
+              </td>
+              <td class="px-4 py-3 text-sm text-gray-600">
+                {{ garden.heritageLevel }}
+              </td>
+              <td class="px-4 py-3 text-sm text-gray-600">
+                {{ garden.publicationBatch }}
+              </td>
+              <td class="px-4 py-3 text-sm text-gray-600">
+                {{ garden.district }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div v-if="earlyGardens.length === 0" class="text-center py-8 text-gray-500">
+        暂无早期年代园林数据
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+table {
+  font-size: 0.875rem;
+}
+</style>
