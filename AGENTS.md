@@ -9,6 +9,7 @@
 - ./archived: 旧数据，禁止使用
 - ./archived/VIS: 旧版可视化项目(A)，带有 高德 API 可供参考（索引文档：docs/OLD_VIS_INDEX.md）
 - ./archived/web: 旧版可视化项目(B)，可供参考。
+- ./docs: 项目相关文档
 
 唯一的真实数据源头：dataset/SuzhouGardenListFull.csv 和 dataset/images 中的图片（以园林名称命名的文件夹）
 
