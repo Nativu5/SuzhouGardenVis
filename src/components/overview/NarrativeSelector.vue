@@ -26,7 +26,7 @@ const narrativeOptions = [
     description: '解释开放性差异的结构性因素，识别权属与用途对可达性的影响'
   },
   {
-    value: 'scale_resource' as NarrativeScene,
+    value: 'scale_resources' as NarrativeScene,
     label: '规模结构与资源配置',
     description: '展示园林规模分布与开放性的关联，识别大型园林所在区域与时代'
   }
