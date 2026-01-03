@@ -7,6 +7,7 @@
 <script setup lang="ts">
 import { useGardenStore } from '@/stores/gardenStore'
 import { computed } from 'vue'
+import GardenImageGallery from '@/components/detail/GardenImageGallery.vue'
 
 const gardenStore = useGardenStore()
 
@@ -20,6 +21,26 @@ const hasSelectedDistrict = computed(() => !!gardenStore.selectedDistrict)
 const districtGardens = computed(() => {
   if (!gardenStore.selectedDistrict) return []
   return gardenStore.getGardensByDistrict(gardenStore.selectedDistrict)
+})
+
+// 判断是否有筛选条件生效
+const hasActiveFilters = computed(() => {
+  const filters = gardenStore.filters
+  return !!(
+    filters.searchKeyword ||
+    (filters.districts && filters.districts.length > 0) ||
+    (filters.openStatus && filters.openStatus.length > 0) ||
+    (filters.heritageLevels && filters.heritageLevels.length > 0) ||
+    (filters.ownershipTypes && filters.ownershipTypes.length > 0) ||
+    (filters.currentUses && filters.currentUses.length > 0) ||
+    (filters.isWorldHeritage !== null && filters.isWorldHeritage !== undefined) ||
+    (filters.constructionPeriods && filters.constructionPeriods.length > 0) ||
+    (filters.eraCategories && filters.eraCategories.length > 0) ||
+    (filters.publicationBatches && filters.publicationBatches.length > 0) ||
+    (filters.areaRanges && filters.areaRanges.length > 0) ||
+    (filters.areaMin !== undefined && filters.areaMin !== null) ||
+    (filters.areaMax !== undefined && filters.areaMax !== null)
+  )
 })
 
 // 处理关闭详情
@@ -70,7 +91,14 @@ const handleClose = () => {
 
       <!-- 区域统计指标 -->
       <div class="p-4 bg-gray-50 border-b border-gray-200">
-        <div class="grid grid-cols-2 gap-3">
+        <!-- 有筛选条件时：只显示满足条件的园林数量 -->
+        <div v-if="hasActiveFilters" class="bg-white rounded-lg p-4">
+          <p class="text-xs text-gray-500 mb-1">满足筛选条件的园林</p>
+          <p class="text-2xl font-bold text-primary-600">{{ districtGardens.length }}</p>
+        </div>
+
+        <!-- 无筛选条件时：显示园林数量和开放数量 -->
+        <div v-else class="grid grid-cols-2 gap-3">
           <div class="bg-white rounded-lg p-3">
             <p class="text-xs text-gray-500 mb-1">园林数量</p>
             <p class="text-2xl font-bold text-gray-900">{{ districtGardens.length }}</p>
@@ -140,10 +168,11 @@ const handleClose = () => {
           </p>
         </div>
 
-        <!-- 图片占位 -->
-        <div class="bg-gray-100 rounded-lg aspect-video flex items-center justify-center">
-          <span class="text-gray-400 text-sm">图片展示（里程碑 6 实现）</span>
-        </div>
+        <!-- 图片展示 -->
+        <GardenImageGallery
+          v-if="gardenStore.selectedGarden"
+          :garden-name="gardenStore.selectedGarden.name"
+        />
 
         <!-- 基础信息 -->
         <div class="space-y-3">

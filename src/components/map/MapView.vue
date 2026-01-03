@@ -160,7 +160,8 @@ const loadDistrictBoundaries = async () => {
           const { name, gardenCount, center } = extData
           console.log(`点击区县: ${name}, 园林数量: ${gardenCount}`)
           showDistrictInfo(name, gardenCount, center)
-          // TODO: 触发右侧详情区显示区域统计
+          // 触发右侧详情区显示区域统计
+          gardenStore.selectDistrict(name)
         })
 
         // 添加鼠标悬停效果
@@ -286,7 +287,8 @@ const createGardenMarker = (garden: GardenData): any => {
   marker.on('click', () => {
     console.log('点击园林:', garden.name)
     showGardenInfo(garden, [garden.longitude, garden.latitude])
-    // TODO: 触发右侧详情区显示园林详情
+    // 触发右侧详情区显示园林详情
+    gardenStore.selectGarden(garden)
   })
 
   return marker
@@ -394,6 +396,8 @@ const loadGardenMarkersWithCluster = (gardens: GardenData[]) => {
         const garden = clusterData[0]
         console.log('点击园林:', garden.name)
         showGardenInfo(garden, [garden.longitude, garden.latitude])
+        // 触发右侧详情区显示园林详情
+        gardenStore.selectGarden(garden)
       }
       // 如果点击的是聚合点，默认会放大，不需要额外处理
     })
