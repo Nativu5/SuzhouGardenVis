@@ -122,8 +122,9 @@ const handleClose = () => {
             class="bg-white border border-gray-200 rounded-lg p-3 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer"
             @click="gardenStore.selectGarden(garden)"
           >
-            <p class="font-medium text-gray-900 text-sm mb-1">{{ garden.name }}</p>
-            <div class="flex items-center space-x-2 text-xs">
+            <p class="font-medium text-gray-900 text-sm mb-2">{{ garden.name }}</p>
+            <div class="flex flex-wrap gap-1.5 text-xs">
+              <!-- 开放情况 -->
               <span
                 :class="[
                   'px-2 py-0.5 rounded',
@@ -132,7 +133,27 @@ const handleClose = () => {
               >
                 {{ garden.openStatus }}
               </span>
-              <span class="text-gray-500">{{ garden.ownershipType }}</span>
+              <!-- 保护等级 -->
+              <span
+                :class="[
+                  'px-2 py-0.5 rounded',
+                  garden.heritageLevel === '全国重点' ? 'bg-red-100 text-red-700' :
+                  garden.heritageLevel === '省级' ? 'bg-orange-100 text-orange-700' :
+                  garden.heritageLevel === '市级' ? 'bg-yellow-100 text-yellow-700' :
+                  garden.heritageLevel === '区级' ? 'bg-blue-100 text-blue-700' :
+                  'bg-gray-100 text-gray-600'
+                ]"
+              >
+                {{ garden.heritageLevel }}
+              </span>
+              <!-- 权属性质 -->
+              <span class="px-2 py-0.5 rounded bg-purple-100 text-purple-700">
+                {{ garden.ownershipType }}
+              </span>
+              <!-- 当前用途 -->
+              <span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-700">
+                {{ garden.currentUse }}
+              </span>
             </div>
           </div>
         </div>

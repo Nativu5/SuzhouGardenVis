@@ -150,6 +150,7 @@ const loadDistrictBoundaries = async () => {
           bubble: true,
           extData: {
             ...feature.properties,
+            districtName: districtName, // 保存区县名称用于筛选
             gardenCount: count
           }
         })
@@ -181,9 +182,11 @@ const loadDistrictBoundaries = async () => {
       })
     })
 
-    // 将所有 polygon 添加到地图
-    mapInstance.add(polygons)
-    districtLayer = polygons // 保存引用以便后续清理
+    // 保存引用以便后续清理
+    districtLayer = polygons
+
+    // 根据当前筛选条件显示行政区遮罩
+    updateDistrictMaskVisibility()
 
     console.log('✅ 行政区边界加载成功')
   } catch (error) {
@@ -445,15 +448,48 @@ const toggleClusterMode = () => {
   updateGardenMarkers(gardenStore.filteredData)
 }
 
+// 更新行政区遮罩显示（根据筛选条件）
+const updateDistrictMaskVisibility = () => {
+  if (!districtLayer || !mapInstance) return
+
+  // 如果遮罩显示被关闭，不做任何操作
+  if (!isShowDistrictMask.value) return
+
+  // 获取筛选的区县列表
+  const selectedDistricts = gardenStore.filters.districts
+
+  // 移除所有遮罩
+  mapInstance.remove(districtLayer)
+
+  // 如果有区县筛选条件，只显示被选中的区县
+  if (selectedDistricts && selectedDistricts.length > 0) {
+    const filteredPolygons = districtLayer.filter((polygon: any) => {
+      const extData = polygon.getExtData()
+      return selectedDistricts.includes(extData.districtName)
+    })
+
+    if (filteredPolygons.length > 0) {
+      mapInstance.add(filteredPolygons)
+      console.log(`🗺️ 显示筛选区县遮罩: ${selectedDistricts.join(', ')}`)
+    }
+  } else {
+    // 如果没有区县筛选，显示所有区县
+    mapInstance.add(districtLayer)
+    console.log('🗺️ 显示所有区县遮罩')
+  }
+}
+
 // 切换行政区遮罩显示/隐藏
 const toggleDistrictMask = () => {
   if (!districtLayer || !mapInstance) return
-  
+
   isShowDistrictMask.value = !isShowDistrictMask.value
-  
+
   if (isShowDistrictMask.value) {
-    mapInstance.add(districtLayer)
+    // 开启遮罩时，根据筛选条件显示
+    updateDistrictMaskVisibility()
   } else {
+    // 关闭遮罩时，移除所有遮罩
     mapInstance.remove(districtLayer)
   }
   console.log(`切换行政区遮罩: ${isShowDistrictMask.value ? '显示' : '隐藏'}`)
@@ -468,6 +504,18 @@ watch(
       updateGardenMarkers(newData)
     }
   }
+)
+
+// 监听区县筛选条件变化，动态更新行政区遮罩显示
+watch(
+  () => gardenStore.filters.districts,
+  () => {
+    if (mapInstance && AMap && districtLayer) {
+      console.log('🔄 区县筛选条件变化，更新行政区遮罩')
+      updateDistrictMaskVisibility()
+    }
+  },
+  { deep: true }
 )
 
 // 组件挂载时初始化地图
