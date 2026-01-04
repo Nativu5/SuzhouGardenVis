@@ -86,18 +86,65 @@ const metrics = computed(() => {
     maxArea: Math.round(maxArea)
   }
 })
+
+// 关键结论数据
+const keyInsights = computed(() => {
+  const totalArea = data.value.reduce((sum, item) => sum + item.area, 0)
+  const top10Area = top10Gardens.value.reduce((sum, item) => sum + item.area, 0)
+  const top10Percentage = totalArea > 0 ? ((top10Area / totalArea) * 100).toFixed(1) : '0'
+
+  const openGardens = data.value.filter(item => item.openStatus === '开放')
+  const closedGardens = data.value.filter(item => item.openStatus === '不开放')
+
+  const openAvgArea = openGardens.length > 0
+    ? Math.round(openGardens.reduce((sum, item) => sum + item.area, 0) / openGardens.length)
+    : 0
+  const closedAvgArea = closedGardens.length > 0
+    ? Math.round(closedGardens.reduce((sum, item) => sum + item.area, 0) / closedGardens.length)
+    : 0
+
+  return {
+    top10Percentage,
+    openAvgArea,
+    closedAvgArea
+  }
+})
 </script>
 
 <template>
   <div class="narrative-scene-4 p-6">
-    <!-- 场景标题与说明 -->
+    <!-- 场景标题与核心观点 -->
     <div class="mb-6">
       <h2 class="text-2xl font-bold text-gray-900 mb-2">
         规模结构与资源配置
       </h2>
-      <p class="text-gray-600">
-        展示园林规模分布与开放性的关联，识别大型园林所在区域与时代
-      </p>
+      <div class="text-sm text-gray-600 mb-4">
+        <strong>核心观点：</strong>园林规模呈强烈长尾分布，少数大园林占据近半面积，开放园林在规模上明显占优。
+      </div>
+
+      <!-- 阅读路径提示 -->
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
+        <strong>阅读路径：</strong>
+        先看"面积区间分布"理解长尾结构，再看"Top10清单"识别大园林，最后查"区县/年代平均面积"理解地域/时代差异
+      </div>
+    </div>
+
+    <!-- 关键结论条 -->
+    <div class="mb-6 grid grid-cols-2 gap-4">
+      <div class="bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-lg p-4">
+        <div class="text-xs text-orange-600 font-medium mb-1">资源集中度</div>
+        <div class="text-lg font-bold text-orange-800">
+          Top10 园林占总面积约 {{ keyInsights.top10Percentage }}%，呈显著集中
+        </div>
+        <div class="text-xs text-orange-600 mt-1">少数大园林占据近半面积</div>
+      </div>
+      <div class="bg-gradient-to-r from-teal-50 to-teal-100 border border-teal-200 rounded-lg p-4">
+        <div class="text-xs text-teal-600 font-medium mb-1">规模与开放性</div>
+        <div class="text-lg font-bold text-teal-800">
+          开放园林平均面积 {{ keyInsights.openAvgArea.toLocaleString() }} ㎡ > 不开放 {{ keyInsights.closedAvgArea.toLocaleString() }} ㎡
+        </div>
+        <div class="text-xs text-teal-600 mt-1">规模与开放正相关</div>
+      </div>
     </div>
 
     <!-- KPI 指标卡 -->
@@ -136,6 +183,9 @@ const metrics = computed(() => {
           y-axis-name="园林数量"
           height="400px"
         />
+        <div class="text-xs text-gray-500 mt-2">
+          注：呈显著长尾分布，小面积园林数量多，大面积园林稀少；开放园林在各区间均有分布
+        </div>
       </div>
 
       <!-- 区县平均面积柱状图 -->
@@ -148,6 +198,9 @@ const metrics = computed(() => {
           y-axis-name="平均面积 (㎡)"
           height="400px"
         />
+        <div class="text-xs text-gray-500 mt-2">
+          注：姑苏区园林平均面积显著高于其他区县，反映核心区大园林集中
+        </div>
       </div>
 
       <!-- 区县总面积柱状图 -->
@@ -160,6 +213,9 @@ const metrics = computed(() => {
           y-axis-name="总面积 (㎡)"
           height="400px"
         />
+        <div class="text-xs text-gray-500 mt-2">
+          注：姑苏区总面积占主导地位，兼具数量与规模优势
+        </div>
       </div>
 
       <!-- 建造年代平均面积柱状图 -->
@@ -172,6 +228,9 @@ const metrics = computed(() => {
           y-axis-name="平均面积 (㎡)"
           height="400px"
         />
+        <div class="text-xs text-gray-500 mt-2">
+          注：明代与宋代及以前园林平均面积更大，体现历史园林的规模优势
+        </div>
       </div>
     </div>
 

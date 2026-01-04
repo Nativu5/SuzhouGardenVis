@@ -8,7 +8,7 @@ import { computed } from 'vue'
 import { useGardenStore } from '@/stores/gardenStore'
 import StackedBarChart from '@/components/charts/StackedBarChart.vue'
 import SankeyChart from '@/components/charts/SankeyChart.vue'
-import BarChart from '@/components/charts/BarChart.vue'
+import ScatterChart from '@/components/charts/ScatterChart.vue'
 import MetricCard from './MetricCard.vue'
 import {
   groupByOwnershipAndOpenStatus,
@@ -63,20 +63,22 @@ const districtOpenData = computed(() => {
   }
 })
 
-// 区县人均开放资源（个/万人）
-const openGardenPerCapitaByDistrict = computed(() => {
-  const result = store.districtStatistics
-    .map(district => ({
-      name: district.name,
-      value: parseFloat(district.openGardenPerCapita.toFixed(2))
-    }))
-    .filter(item => item.value > 0)
-    .sort((a, b) => b.value - a.value)
+// 区县公平性散点图数据
+const districtFairnessScatter = computed(() => {
+  const scatterData = store.districtStatistics
+    .filter(district => district.gardenCount > 0)
+    .map(district => {
+      return {
+        name: district.name,
+        x: district.openRate, // 开放率（%）
+        y: district.openGardenPerCapita, // 人均开放园林数（个/万人）
+        size: district.gardenCount, // 园林总数
+        color: getDistrictColor(district.name),
+        category: district.name
+      }
+    })
 
-  return {
-    data: result,
-    colors: result.map(item => getDistrictColor(item.name))
-  }
+  return scatterData
 })
 
 // KPI 指标
@@ -118,40 +120,30 @@ const hasActiveFilters = computed(() => {
   )
 })
 
-// 人均开放资源tooltip
-const perCapitaTooltipFormatter = (params: any) => {
-  if (!params || params.length === 0) return ''
-  const param = params[0]
-  const districtName = param.name
-  const perCapitaValue = param.value
-
-  // 计算排名
-  const allValues = openGardenPerCapitaByDistrict.value.data.map(d => d.value)
-  const rank = calculateRank(perCapitaValue, allValues)
-
-  // 计算该区县的平均开放率
-  const districtStats = store.districtStatistics.find(d => d.name === districtName)
-  const openRate = districtStats ? districtStats.openRate.toFixed(1) : '0'
+// 区县公平性散点图tooltip
+const fairnessScatterTooltipFormatter = (params: any) => {
+  if (!params || !params.data?.rawData) return ''
+  const item = params.data.rawData
 
   const filterHint = hasActiveFilters.value ? `（基于筛选的${data.value.length}座园林）` : `（基于全部${store.rawData.length}座园林）`
 
   return `
-    <div style="padding: 8px; min-width: 180px;">
+    <div style="padding: 8px; min-width: 200px;">
       <div style="font-weight: 600; font-size: 14px; color: #111827; margin-bottom: 6px; border-bottom: 1px solid #E5E7EB; padding-bottom: 4px;">
-        ${districtName}
+        ${item.name}
       </div>
       <div style="font-size: 13px; line-height: 1.6; color: #374151;">
         <div style="margin-bottom: 3px;">
-          <span style="color: #6B7280;">人均开放园林：</span>
-          <span style="font-weight: 600; color: #10B981;">${perCapitaValue} 个/万人</span>
-        </div>
-        <div style="margin-bottom: 3px;">
-          <span style="color: #6B7280;">排名：</span>
-          <span style="font-weight: 600; color: #F59E0B;">${formatRank(rank)}</span>
-        </div>
-        <div style="margin-bottom: 3px;">
           <span style="color: #6B7280;">开放率：</span>
-          <span style="font-weight: 600; color: ${parseFloat(openRate) >= 50 ? '#10B981' : '#F59E0B'};">${openRate}%</span>
+          <span style="font-weight: 600; color: #10B981;">${item.x.toFixed(1)}%</span>
+        </div>
+        <div style="margin-bottom: 3px;">
+          <span style="color: #6B7280;">人均开放园林：</span>
+          <span style="font-weight: 600; color: #5470C6;">${item.y.toFixed(2)} 个/万人</span>
+        </div>
+        <div style="margin-bottom: 3px;">
+          <span style="color: #6B7280;">园林总数：</span>
+          <span style="font-weight: 600; color: #FAC858;">${item.size} 座</span>
         </div>
       </div>
       <div style="margin-top: 6px; padding-top: 4px; border-top: 1px solid #F3F4F6; font-size: 11px; color: #9CA3AF;">
@@ -223,14 +215,45 @@ const districtOpenTooltipFormatter = (params: any) => {
 
 <template>
   <div class="narrative-scene-3 p-6">
-    <!-- 场景标题与说明 -->
+    <!-- 场景标题与核心观点 -->
     <div class="mb-6">
       <h2 class="text-2xl font-bold text-gray-900 mb-2">
-        开放可达与权属/用途
+        开放可达与制度结构
       </h2>
-      <p class="text-gray-600">
-        解释开放性差异的结构性因素，识别权属与用途对可达性的影响
-      </p>
+      <div class="text-sm text-gray-600 mb-4">
+        <strong>核心观点：</strong>开放差异主要由权属与用途结构驱动，并在区县层面表现为人均可达性的显著不均衡。
+      </div>
+
+      <!-- 阅读路径提示 -->
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
+        <strong>阅读路径：</strong>
+        先看"权属→开放"桑基图与"当前用途×开放"了解结构，再看"区县公平性散点"理解空间不均衡，最后查"未开放园林清单"
+      </div>
+    </div>
+
+    <!-- 关键结论条 -->
+    <div class="mb-6 grid grid-cols-3 gap-4">
+      <div class="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4">
+        <div class="text-xs text-blue-600 font-medium mb-1">权属差异</div>
+        <div class="text-lg font-bold text-blue-800">
+          国有园林开放率显著高于私有/企业
+        </div>
+        <div class="text-xs text-blue-600 mt-1">结构性差异明显</div>
+      </div>
+      <div class="bg-gradient-to-r from-rose-50 to-rose-100 border border-rose-200 rounded-lg p-4">
+        <div class="text-xs text-rose-600 font-medium mb-1">用途限制</div>
+        <div class="text-lg font-bold text-rose-800">
+          私人用途几乎不开放
+        </div>
+        <div class="text-xs text-rose-600 mt-1">公共可达性受用途结构限制</div>
+      </div>
+      <div class="bg-gradient-to-r from-emerald-50 to-emerald-100 border border-emerald-200 rounded-lg p-4">
+        <div class="text-xs text-emerald-600 font-medium mb-1">空间公平</div>
+        <div class="text-lg font-bold text-emerald-800">
+          区县间人均可达性差异显著
+        </div>
+        <div class="text-xs text-emerald-600 mt-1">核心区远高于外围区县</div>
+      </div>
     </div>
 
     <!-- KPI 指标卡 -->
@@ -266,6 +289,9 @@ const districtOpenTooltipFormatter = (params: any) => {
           :links="ownershipOpenSankeyData.links"
           height="450px"
         />
+        <div class="text-xs text-gray-500 mt-2">
+          注：展示权属性质到开放情况的流向，线条粗细表示数量
+        </div>
       </div>
 
       <!-- 当前用途×开放情况分层柱状图 -->
@@ -278,6 +304,9 @@ const districtOpenTooltipFormatter = (params: any) => {
           y-axis-name="园林数量"
           height="450px"
         />
+        <div class="text-xs text-gray-500 mt-2">
+          注：私人用途几乎不开放，游览服务开放率高；颜色=开放情况
+        </div>
       </div>
 
       <!-- 区县×开放情况分层柱状图 -->
@@ -291,19 +320,25 @@ const districtOpenTooltipFormatter = (params: any) => {
           height="400px"
           :tooltip-formatter="districtOpenTooltipFormatter"
         />
+        <div class="text-xs text-gray-500 mt-2">
+          注：展示各区县开放情况构成；颜色=开放情况
+        </div>
       </div>
 
-      <!-- 区县人均开放资源 -->
+      <!-- 区县公平性散点图 -->
       <div class="bg-white rounded-lg border border-gray-200 p-4">
-        <BarChart
-          title="区县人均开放资源"
-          :data="openGardenPerCapitaByDistrict.data"
-          :colors="openGardenPerCapitaByDistrict.colors"
-          x-axis-name="区县"
+        <ScatterChart
+          title="区县公平性散点图"
+          :data="districtFairnessScatter"
+          x-axis-name="开放率 (%)"
           y-axis-name="人均开放园林 (个/万人)"
           height="400px"
-          :tooltip-formatter="perCapitaTooltipFormatter"
+          :show-legend="false"
+          :tooltip-formatter="fairnessScatterTooltipFormatter"
         />
+        <div class="text-xs text-gray-500 mt-2">
+          注：X=开放率，Y=人均开放园林数，气泡大小=园林总数
+        </div>
       </div>
     </div>
 

@@ -6,7 +6,7 @@
 import * as echarts from 'echarts/core'
 
 // 导入图表类型
-import { BarChart, SankeyChart, RadarChart } from 'echarts/charts'
+import { BarChart, SankeyChart, RadarChart, ScatterChart, HeatmapChart } from 'echarts/charts'
 
 // 导入组件
 import {
@@ -14,7 +14,8 @@ import {
   TooltipComponent,
   GridComponent,
   LegendComponent,
-  DataZoomComponent
+  DataZoomComponent,
+  VisualMapComponent
 } from 'echarts/components'
 
 // 导入渲染器
@@ -26,6 +27,8 @@ echarts.use([
   BarChart,
   SankeyChart,
   RadarChart,
+  ScatterChart,
+  HeatmapChart,
 
   // 组件
   TitleComponent,
@@ -33,6 +36,7 @@ echarts.use([
   GridComponent,
   LegendComponent,
   DataZoomComponent,
+  VisualMapComponent,
 
   // 渲染器
   CanvasRenderer

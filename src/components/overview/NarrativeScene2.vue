@@ -122,14 +122,38 @@ const metrics = computed(() => {
 
 <template>
   <div class="narrative-scene-2 p-6">
-    <!-- 场景标题与说明 -->
+    <!-- 场景标题与核心观点 -->
     <div class="mb-6">
       <h2 class="text-2xl font-bold text-gray-900 mb-2">
         历史谱系与认定节奏
       </h2>
-      <p class="text-gray-600">
-        展示建设时期结构与认定批次的关系，观察不同年代的保护级别分布
-      </p>
+      <div class="text-sm text-gray-600 mb-4">
+        <strong>核心观点：</strong>认定节奏存在明显阶段性，现代园林集中在后期批次，早期园林分布更分散，体现价值认定的时序差异。
+      </div>
+
+      <!-- 阅读路径提示 -->
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
+        <strong>阅读路径：</strong>
+        先看"公布批次×建造年代"识别批次节奏，再看"建造年代×文保级别"理解等级分布，最后浏览"早期园林清单"
+      </div>
+    </div>
+
+    <!-- 关键结论条 -->
+    <div class="mb-6 grid grid-cols-2 gap-4">
+      <div class="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-lg p-4">
+        <div class="text-xs text-purple-600 font-medium mb-1">认定节奏</div>
+        <div class="text-lg font-bold text-purple-800">
+          现代园林集中在后期批次（3/4）
+        </div>
+        <div class="text-xs text-purple-600 mt-1">早期园林分布更分散，体现价值认定的时序差异</div>
+      </div>
+      <div class="bg-linear-to-r from-amber-50 to-amber-100 border border-amber-200 rounded-lg p-4">
+        <div class="text-xs text-amber-600 font-medium mb-1">历史规模</div>
+        <div class="text-lg font-bold text-amber-800">
+          明代与宋代及以前园林面积整体更大
+        </div>
+        <div class="text-xs text-amber-600 mt-1">体现历史园林的规模优势</div>
+      </div>
     </div>
 
     <!-- KPI 指标卡 -->
@@ -143,7 +167,7 @@ const metrics = computed(() => {
         title="早期园林"
         :value="metrics.earlyCount"
         unit="座"
-        description="明代及以前"
+        description="宋代及以前"
       />
       <MetricCard
         title="最早园林"
@@ -168,6 +192,9 @@ const metrics = computed(() => {
           y-axis-name="园林数量"
           height="400px"
         />
+        <div class="text-xs text-gray-500 mt-2">
+          注：清代园林占主导，现代园林占比较高
+        </div>
       </div>
 
       <!-- 建造年代×文保单位级别分层柱状图 -->
@@ -180,6 +207,9 @@ const metrics = computed(() => {
           y-axis-name="园林数量"
           height="400px"
         />
+        <div class="text-xs text-gray-500 mt-2">
+          注：展示不同年代园林的文保级别分布，颜色=文保级别
+        </div>
       </div>
 
       <!-- 公布批次×建造年代分层柱状图 -->
@@ -192,6 +222,9 @@ const metrics = computed(() => {
           y-axis-name="园林数量"
           height="400px"
         />
+        <div class="text-xs text-gray-500 mt-2">
+          注：现代园林集中在批次3/4，早期园林分布更分散；颜色=建造年代
+        </div>
       </div>
     </div>
 

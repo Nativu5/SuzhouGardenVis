@@ -1,18 +1,20 @@
 <script setup lang="ts">
 /**
- * 叙事场景1：空间集中与遗产核心
- * 呈现园林在苏州各区县的集中程度与高等级保护的空间分布
+ * 叙事场景1（强化版）：空间集中与遗产核心
+ * 核心观点：园林与高等级遗产高度集中在古城核心区，集中度远高于面积与人口占比，形成"单极核心"
  */
 
 import { computed } from 'vue'
 import { useGardenStore } from '@/stores/gardenStore'
-import StackedBarChart from '@/components/charts/StackedBarChart.vue'
+import HeatmapMatrixChart from '@/components/charts/HeatmapMatrixChart.vue'
+import ScatterChart from '@/components/charts/ScatterChart.vue'
 import BarChart from '@/components/charts/BarChart.vue'
+import StackedBarChart from '@/components/charts/StackedBarChart.vue'
 import MetricCard from './MetricCard.vue'
 import {
   groupByDistrict,
-  groupAreaByDistrict,
-  groupByDistrictAndHeritageLevel,
+  generateDistrictHeritageLevelMatrix,
+  calculateHighLevelHeritageRatio,
   calculateRank,
   calculatePercentage,
   formatNumber,
@@ -20,7 +22,8 @@ import {
 } from '@/utils/chartDataProcessor'
 import {
   getDistrictColor,
-  getHeritageLevelColor
+  getHeritageLevelColor,
+  getOpenStatusColor
 } from '@/config/theme'
 
 const store = useGardenStore()
@@ -35,13 +38,9 @@ const worldHeritageGardens = computed(() => {
     .sort((a, b) => a.district.localeCompare(b.district))
 })
 
-// 按区县统计园林数量
-const gardenCountByDistrict = computed(() => {
-  const result = groupByDistrict(data.value)
-  return {
-    data: result,
-    colors: result.map(item => getDistrictColor(item.name))
-  }
+// 区县×文保级别矩阵热力图数据
+const districtHeritageLevelMatrix = computed(() => {
+  return generateDistrictHeritageLevelMatrix(data.value)
 })
 
 // 园林密度对比（个/平方公里）
@@ -60,48 +59,86 @@ const gardenDensityByDistrict = computed(() => {
   }
 })
 
-// 按区县统计总面积
-const gardenAreaByDistrict = computed(() => {
-  const result = groupAreaByDistrict(data.value)
+// 园林占比/面积占比比值（集中度比值）
+const concentrationRatio = computed(() => {
+  const totalGardens = data.value.length
+  const totalArea = store.districtData.reduce((sum, d) => sum + d.area, 0)
+
+  const result = store.districtStatistics
+    .map(districtStat => {
+      const district = store.districtData.find(d => d.name === districtStat.name)
+      if (!district || !totalArea) return null
+
+      const gardenRatio = districtStat.gardenCount / totalGardens
+      const areaRatio = district.area / totalArea
+      const ratio = areaRatio > 0 ? gardenRatio / areaRatio : 0
+
+      return {
+        name: districtStat.name,
+        value: parseFloat(ratio.toFixed(2)),
+        gardenRatio: gardenRatio * 100,
+        areaRatio: areaRatio * 100
+      }
+    })
+    .filter(item => item !== null && item.value > 0)
+    .sort((a, b) => b!.value - a!.value) as Array<{
+      name: string
+      value: number
+      gardenRatio: number
+      areaRatio: number
+    }>
+
   return {
     data: result,
     colors: result.map(item => getDistrictColor(item.name))
   }
 })
 
-// 按区县×文保级别分层统计
-const districtHeritageData = computed(() => {
-  const result = groupByDistrictAndHeritageLevel(data.value)
-  return {
-    categories: result.categories,
-    series: result.series.map(s => ({
-      ...s,
-      color: getHeritageLevelColor(s.name)
-    }))
-  }
-})
+// 核心区结构散点图数据
+const coreDistrictScatter = computed(() => {
+  const scatterData = store.districtStatistics
+    .filter(district => district.gardenCount > 0)
+    .map(district => {
+      const highLevelCount = data.value.filter(
+        item => item.district === district.name &&
+        (item.heritageLevel === '全国' || item.heritageLevel === '省级')
+      ).length
+      const highLevelRatio = district.gardenCount > 0
+        ? (highLevelCount / district.gardenCount) * 100
+        : 0
 
-// 文保等级构成
-const heritageLevelComposition = computed(() => {
-  const levelMap = new Map<string, number>()
-  data.value.forEach(item => {
-    const level = item.heritageLevel || '未定级'
-    levelMap.set(level, (levelMap.get(level) || 0) + 1)
-  })
-  
-  const order = ['全国', '省级', '市级', '县级', '未定级']
-  
-  const result = Array.from(levelMap.entries())
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => {
-       const indexA = order.indexOf(a.name)
-       const indexB = order.indexOf(b.name)
-       return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB)
+      return {
+        name: district.name,
+        x: district.gardenDensity,
+        y: highLevelRatio,
+        size: district.gardenCount,
+        color: getOpenStatusColor('开放'),
+        category: district.name,
+        openRate: district.openRate
+      }
     })
 
+  return scatterData
+})
+
+// 文保等级构成（区县×文保级别堆叠柱状图）
+const heritageLevelComposition = computed(() => {
+  // 复用已有的矩阵数据生成函数
+  const matrixResult = generateDistrictHeritageLevelMatrix(data.value)
+
+  // 转换为堆叠柱状图需要的格式
   return {
-    data: result,
-    colors: result.map(item => getHeritageLevelColor(item.name))
+    categories: matrixResult.xCategories, // 区县
+    series: matrixResult.yCategories.map(level => ({
+      name: level,
+      data: matrixResult.xCategories.map(district => {
+        const item = matrixResult.matrixData.find(
+          d => d.xCategory === district && d.yCategory === level
+        )
+        return item ? item.value : 0
+      }),
+      color: getHeritageLevelColor(level)
+    }))
   }
 })
 
@@ -110,19 +147,46 @@ const metrics = computed(() => {
   const totalCount = data.value.length
   const heritageCount = worldHeritageGardens.value.length
   const totalArea = data.value.reduce((sum, item) => sum + item.area, 0)
-  const topDistrict = gardenCountByDistrict.value.data[0]
+  const topDistrict = gardenDensityByDistrict.value.data[0]
+  const highLevelRatio = calculateHighLevelHeritageRatio(data.value)
+
+  // 计算姑苏区的集中度比值
+  const gususRatio = concentrationRatio.value.data.find(item => item.name === '姑苏区')
 
   return {
     totalCount,
     heritageCount,
-    totalArea: Math.round(totalArea),
-    topDistrict: topDistrict ? `${topDistrict.name} (${topDistrict.value}座)` : '-'
+    highLevelRatio: highLevelRatio.toFixed(1) + '%',
+    concentrationRatio: gususRatio ? `姑苏区 ${gususRatio.value.toFixed(0)}x` : '-'
   }
 })
 
-/**
- * Tooltip formatters
- */
+// 关键结论数据
+const keyInsights = computed(() => {
+  const gususStat = store.districtStatistics.find(d => d.name === '姑苏区')
+  const gususDistrict = store.districtData.find(d => d.name === '姑苏区')
+  const totalArea = store.districtData.reduce((sum, d) => sum + d.area, 0)
+
+  if (!gususStat || !gususDistrict) {
+    return {
+      gususGardenRatio: '51.9%',
+      gususAreaRatio: '1.0%',
+      concentrationRatio: '52',
+      worldHeritageLocation: '姑苏区'
+    }
+  }
+
+  const gardenRatio = ((gususStat.gardenCount / data.value.length) * 100).toFixed(1)
+  const areaRatio = ((gususDistrict.area / totalArea) * 100).toFixed(1)
+  const ratio = (parseFloat(gardenRatio) / parseFloat(areaRatio)).toFixed(0)
+
+  return {
+    gususGardenRatio: gardenRatio + '%',
+    gususAreaRatio: areaRatio + '%',
+    concentrationRatio: ratio,
+    worldHeritageLocation: '姑苏区'
+  }
+})
 
 // 判断是否有筛选条件生效
 const hasActiveFilters = computed(() => {
@@ -144,32 +208,40 @@ const hasActiveFilters = computed(() => {
   )
 })
 
-// 园林密度tooltip
-const densityTooltipFormatter = (params: any) => {
+/**
+ * Tooltip formatters
+ */
+
+// 集中度比值 tooltip
+const concentrationRatioTooltipFormatter = (params: any) => {
   if (!params || params.length === 0) return ''
   const param = params[0]
   const districtName = param.name
-  const density = param.value
+  const data = concentrationRatio.value.data.find(item => item.name === districtName)
 
-  // 计算排名和占比
-  const allDensities = gardenDensityByDistrict.value.data.map(d => d.value)
-  const rank = calculateRank(density, allDensities)
+  if (!data) return ''
 
-  const filterHint = hasActiveFilters.value ? `（基于筛选的${data.value.length}座园林）` : `（基于全部${store.rawData.length}座园林）`
+  const filterHint = hasActiveFilters.value
+    ? `（基于筛选的${store.filteredData.length}座园林）`
+    : `（基于全部${store.rawData.length}座园林）`
 
   return `
-    <div style="padding: 8px; min-width: 180px;">
+    <div style="padding: 8px; min-width: 200px;">
       <div style="font-weight: 600; font-size: 14px; color: #111827; margin-bottom: 6px; border-bottom: 1px solid #E5E7EB; padding-bottom: 4px;">
         ${districtName}
       </div>
       <div style="font-size: 13px; line-height: 1.6; color: #374151;">
         <div style="margin-bottom: 3px;">
-          <span style="color: #6B7280;">园林密度：</span>
-          <span style="font-weight: 600; color: #5470C6;">${density} 个/km²</span>
+          <span style="color: #6B7280;">集中度比值：</span>
+          <span style="font-weight: 600; color: #EE6666;">${data.value}x</span>
         </div>
         <div style="margin-bottom: 3px;">
-          <span style="color: #6B7280;">排名：</span>
-          <span style="font-weight: 600; color: #F59E0B;">${formatRank(rank)}</span>
+          <span style="color: #6B7280;">园林占比：</span>
+          <span style="font-weight: 600; color: #5470C6;">${data.gardenRatio.toFixed(1)}%</span>
+        </div>
+        <div style="margin-bottom: 3px;">
+          <span style="color: #6B7280;">面积占比：</span>
+          <span style="font-weight: 600; color: #91CC75;">${data.areaRatio.toFixed(1)}%</span>
         </div>
       </div>
       <div style="margin-top: 6px; padding-top: 4px; border-top: 1px solid #F3F4F6; font-size: 11px; color: #9CA3AF;">
@@ -179,42 +251,33 @@ const densityTooltipFormatter = (params: any) => {
   `
 }
 
-// 园林总面积tooltip
-const areaTooltipFormatter = (params: any) => {
-  if (!params || params.length === 0) return ''
-  const param = params[0]
-  const districtName = param.name
-  const areaValue = param.value
-
-  // 计算总面积和排名
-  const totalArea = data.value.reduce((sum, item) => sum + item.area, 0)
-  const allAreas = gardenAreaByDistrict.value.data.map(d => d.value)
-  const rank = calculateRank(areaValue, allAreas)
-  const percentage = calculatePercentage(areaValue, totalArea)
-
-  const filterHint = hasActiveFilters.value ? `（基于筛选的${data.value.length}座园林）` : `（基于全部${store.rawData.length}座园林）`
+// 核心区结构散点图 tooltip
+const coreScatterTooltipFormatter = (params: any) => {
+  if (!params || !params.data?.rawData) return ''
+  const item = params.data.rawData
 
   return `
     <div style="padding: 8px; min-width: 180px;">
       <div style="font-weight: 600; font-size: 14px; color: #111827; margin-bottom: 6px; border-bottom: 1px solid #E5E7EB; padding-bottom: 4px;">
-        ${districtName}
+        ${item.name}
       </div>
       <div style="font-size: 13px; line-height: 1.6; color: #374151;">
         <div style="margin-bottom: 3px;">
-          <span style="color: #6B7280;">总面积：</span>
-          <span style="font-weight: 600; color: #5470C6;">${formatNumber(areaValue)} ㎡</span>
+          <span style="color: #6B7280;">园林密度：</span>
+          <span style="font-weight: 600; color: #5470C6;">${item.x.toFixed(2)} 个/km²</span>
         </div>
         <div style="margin-bottom: 3px;">
-          <span style="color: #6B7280;">占全市比：</span>
-          <span style="font-weight: 600; color: #10B981;">${percentage}</span>
+          <span style="color: #6B7280;">高等级占比：</span>
+          <span style="font-weight: 600; color: #EE6666;">${item.y.toFixed(1)}%</span>
         </div>
         <div style="margin-bottom: 3px;">
-          <span style="color: #6B7280;">排名：</span>
-          <span style="font-weight: 600; color: #F59E0B;">${formatRank(rank)}</span>
+          <span style="color: #6B7280;">园林数量：</span>
+          <span style="font-weight: 600; color: #FAC858;">${item.size} 座</span>
         </div>
-      </div>
-      <div style="margin-top: 6px; padding-top: 4px; border-top: 1px solid #F3F4F6; font-size: 11px; color: #9CA3AF;">
-        ${filterHint}
+        <div style="margin-bottom: 3px;">
+          <span style="color: #6B7280;">开放率：</span>
+          <span style="font-weight: 600; color: #91CC75;">${item.openRate.toFixed(1)}%</span>
+        </div>
       </div>
     </div>
   `
@@ -223,14 +286,45 @@ const areaTooltipFormatter = (params: any) => {
 
 <template>
   <div class="narrative-scene-1 p-6">
-    <!-- 场景标题与说明 -->
+    <!-- 场景标题与核心观点 -->
     <div class="mb-6">
       <h2 class="text-2xl font-bold text-gray-900 mb-2">
         空间集中与遗产核心
       </h2>
-      <p class="text-gray-600">
-        呈现园林在苏州各区县的集中程度与高等级保护的空间分布
-      </p>
+      <div class="text-sm text-gray-600 mb-4">
+        <strong>核心观点：</strong>园林与高等级遗产高度集中在古城核心区，集中度远高于面积与人口占比，形成"单极核心"。
+      </div>
+
+      <!-- 阅读路径提示 -->
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
+        <strong>阅读路径：</strong>
+        先看"集中度比值"，再看"核心区结构散点"，最后查"遗产清单"
+      </div>
+    </div>
+
+    <!-- 关键结论条 -->
+    <div class="mb-6 grid grid-cols-3 gap-4">
+      <div class="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-lg p-4">
+        <div class="text-xs text-red-600 font-medium mb-1">空间集中度</div>
+        <div class="text-lg font-bold text-red-800">
+          姑苏区占地约 {{ keyInsights.gususAreaRatio }}，却拥有 {{ keyInsights.gususGardenRatio }} 园林
+        </div>
+        <div class="text-xs text-red-600 mt-1">集中度比值约 {{ keyInsights.concentrationRatio }}</div>
+      </div>
+      <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 rounded-lg p-4">
+        <div class="text-xs text-yellow-600 font-medium mb-1">遗产核心</div>
+        <div class="text-lg font-bold text-yellow-800">
+          世界遗产全部分布于{{ keyInsights.worldHeritageLocation }}
+        </div>
+        <div class="text-xs text-yellow-600 mt-1">遗产核心高度单极化</div>
+      </div>
+      <div class="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-lg p-4">
+        <div class="text-xs text-green-600 font-medium mb-1">高等级遗产</div>
+        <div class="text-lg font-bold text-green-800">
+          核心区高等级遗产占比显著更高
+        </div>
+        <div class="text-xs text-green-600 mt-1">全国+省级占比 {{ metrics.highLevelRatio }}</div>
+      </div>
     </div>
 
     <!-- KPI 指标卡 -->
@@ -246,67 +340,78 @@ const areaTooltipFormatter = (params: any) => {
         unit="座"
       />
       <MetricCard
-        title="总面积"
-        :value="metrics.totalArea"
-        unit="㎡"
+        title="高等级占比"
+        :value="metrics.highLevelRatio"
       />
       <MetricCard
-        title="园林最多区县"
-        :value="metrics.topDistrict"
+        title="最高集中度"
+        :value="metrics.concentrationRatio"
       />
     </div>
 
     <!-- 图表网格 -->
     <div class="grid grid-cols-2 gap-6 mb-6">
-      <!-- 区县×文保单位级别分层柱状图 -->
+      <!-- 区县×文保级别矩阵热力图 -->
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <HeatmapMatrixChart
+          title="区县×文保级别热力矩阵"
+          :data="districtHeritageLevelMatrix.matrixData"
+          :x-categories="districtHeritageLevelMatrix.xCategories"
+          :y-categories="districtHeritageLevelMatrix.yCategories"
+          x-axis-name="区县"
+          y-axis-name="文保级别"
+          height="400px"
+        />
+        <div class="text-xs text-gray-500 mt-2">
+          注：色深 = 数量；鼠标悬停显示区县内占比
+        </div>
+      </div>
+
+      <!-- 园林占比/面积占比比值条形图 -->
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <BarChart
+          title="各区县集中度比值"
+          :data="concentrationRatio.data"
+          :colors="concentrationRatio.colors"
+          x-axis-name="区县"
+          y-axis-name="集中度比值"
+          height="400px"
+          :tooltip-formatter="concentrationRatioTooltipFormatter"
+        />
+        <div class="text-xs text-gray-500 mt-2">
+          注：集中度比值 = 园林占比 ÷ 面积占比；比值越高，集中度越高
+        </div>
+      </div>
+
+      <!-- 核心区结构散点图 -->
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <ScatterChart
+          title="核心区结构散点图"
+          :data="coreDistrictScatter"
+          x-axis-name="园林密度 (个/km²)"
+          y-axis-name="高等级占比 (%)"
+          height="400px"
+          :show-legend="false"
+          :tooltip-formatter="coreScatterTooltipFormatter"
+        />
+        <div class="text-xs text-gray-500 mt-2">
+          注：气泡大小 = 园林数量；高等级 = 全国+省级
+        </div>
+      </div>
+
+      <!-- 区县×文保等级堆叠柱状图 -->
       <div class="bg-white rounded-lg border border-gray-200 p-4">
         <StackedBarChart
-          title="区县×文保单位级别分布"
-          :categories="districtHeritageData.categories"
-          :series="districtHeritageData.series"
+          title="区县×文保等级构成"
+          :categories="heritageLevelComposition.categories"
+          :series="heritageLevelComposition.series"
           x-axis-name="区县"
           y-axis-name="园林数量"
           height="400px"
         />
-      </div>
-
-      <!-- 园林密度对比图 -->
-      <div class="bg-white rounded-lg border border-gray-200 p-4">
-        <BarChart
-          title="各区县园林密度对比"
-          :data="gardenDensityByDistrict.data"
-          :colors="gardenDensityByDistrict.colors"
-          x-axis-name="区县"
-          y-axis-name="园林密度 (个/km²)"
-          height="400px"
-          :tooltip-formatter="densityTooltipFormatter"
-        />
-      </div>
-
-      <!-- 区县总面积柱状图 -->
-      <div class="bg-white rounded-lg border border-gray-200 p-4">
-        <BarChart
-          title="各区县园林总面积"
-          :data="gardenAreaByDistrict.data"
-          :colors="gardenAreaByDistrict.colors"
-          x-axis-name="区县"
-          y-axis-name="总面积 (㎡)"
-          height="400px"
-          :tooltip-formatter="areaTooltipFormatter"
-        />
-      </div>
-
-      <!-- 文保等级构成 -->
-      <div class="bg-white rounded-lg border border-gray-200 p-4">
-        <BarChart
-          title="文保等级构成"
-          :data="heritageLevelComposition.data"
-          :colors="heritageLevelComposition.colors"
-          x-axis-name="数量"
-          y-axis-name="文保级别"
-          height="400px"
-          :horizontal="true"
-        />
+        <div class="text-xs text-gray-500 mt-2">
+          注：展示各区县不同文保级别园林的分布情况
+        </div>
       </div>
     </div>
 

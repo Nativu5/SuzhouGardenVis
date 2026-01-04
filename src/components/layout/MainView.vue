@@ -10,6 +10,7 @@ import NarrativeScene1 from '@/components/overview/NarrativeScene1.vue'
 import NarrativeScene2 from '@/components/overview/NarrativeScene2.vue'
 import NarrativeScene3 from '@/components/overview/NarrativeScene3.vue'
 import NarrativeScene4 from '@/components/overview/NarrativeScene4.vue'
+import NarrativeScene5 from '@/components/overview/NarrativeScene5.vue'
 import MapView from '@/components/map/MapView.vue'
 
 const gardenStore = useGardenStore()
@@ -30,6 +31,7 @@ const currentNarrative = computed(() => gardenStore.overviewNarrative)
       <NarrativeScene2 v-else-if="currentNarrative === 'historical_rhythm'" />
       <NarrativeScene3 v-else-if="currentNarrative === 'accessibility_ownership'" />
       <NarrativeScene4 v-else-if="currentNarrative === 'scale_resources'" />
+      <NarrativeScene5 v-else-if="currentNarrative === 'protection_risk'" />
     </div>
 
     <!-- 探索模式：地图视图 -->

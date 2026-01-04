@@ -77,6 +77,16 @@ export const WORLD_HERITAGE_COLORS = {
 }
 
 /**
+ * 保护状况配色方案
+ */
+export const PROTECTION_STATUS_COLORS: Record<string, string> = {
+  '好': '#91CC75',    // 绿色 - 状况良好
+  '中': '#FAC858',    // 黄色 - 中等状况
+  '差': '#EE6666',    // 红色 - 状况较差
+  '未知': '#C0C0C0'   // 灰色
+}
+
+/**
  * 面积区间配色方案（从小到大，颜色从浅到深）
  */
 export const AREA_RANGE_COLORS: Record<string, string> = {
@@ -134,6 +144,13 @@ export function getWorldHeritageColor(isWorldHeritage: boolean): string {
  */
 export function getAreaRangeColor(range: string): string {
   return AREA_RANGE_COLORS[range] || '#C0C0C0'
+}
+
+/**
+ * 获取保护状况颜色
+ */
+export function getProtectionStatusColor(status: string): string {
+  return PROTECTION_STATUS_COLORS[status] || '#C0C0C0'
 }
 
 /**

@@ -68,6 +68,7 @@ export type NarrativeScene =
   | 'historical_rhythm' // 历史谱系与认定节奏
   | 'accessibility_ownership' // 开放可达与权属/用途
   | 'scale_resources' // 规模结构与资源配置
+  | 'protection_risk' // 保护状况与风险提示
 
 /**
  * 叙事场景配置
