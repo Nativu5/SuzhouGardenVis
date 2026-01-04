@@ -122,14 +122,14 @@ const keyInsights = computed(() => {
 
     <!-- 关键结论条 -->
     <div class="mb-6 grid grid-cols-2 gap-4">
-      <div class="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-lg p-4">
+      <div class="bg-linear-to-r from-red-50 to-red-100 border border-red-200 rounded-lg p-4">
         <div class="text-xs text-red-600 font-medium mb-1">保护与开放关联</div>
         <div class="text-lg font-bold text-red-800">
           保护状况为"中/差"的园林中，不开放比例达 {{ keyInsights.riskClosedRate }}%
         </div>
         <div class="text-xs text-red-600 mt-1">保护状况与开放性存在明显关联</div>
       </div>
-      <div class="bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 rounded-lg p-4">
+      <div class="bg-linear-to-r from-amber-50 to-amber-100 border border-amber-200 rounded-lg p-4">
         <div class="text-xs text-amber-600 font-medium mb-1">风险空间集中</div>
         <div class="text-lg font-bold text-amber-800">
           风险园林集中在 {{ keyInsights.topRiskDistricts }}

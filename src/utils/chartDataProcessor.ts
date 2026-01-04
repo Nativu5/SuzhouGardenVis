@@ -652,37 +652,6 @@ export function generateProtectionOpenStatusMatrix(data: GardenData[]): {
 }
 
 /**
- * 计算区县集中度比值（园林占比 ÷ 面积占比）
- * @param gardenData 园林数据
- * @param districtArea 区县面积（km²）
- * @param totalArea 总面积（km²）
- */
-export function calculateDistrictConcentrationRatio(
-  gardenData: GardenData[],
-  districtArea: number,
-  totalArea: number
-): { name: string; value: number }[] {
-  const totalGardens = gardenData.length
-  const districtMap = new Map<string, number>()
-
-  gardenData.forEach(item => {
-    districtMap.set(item.district, (districtMap.get(item.district) || 0) + 1)
-  })
-
-  // 这里需要区县面积数据，暂时返回园林占比
-  return Array.from(districtMap.entries())
-    .map(([name, count]) => {
-      const gardenRatio = count / totalGardens
-      // 实际应该除以面积占比，这里暂时返回园林占比
-      return {
-        name,
-        value: parseFloat((gardenRatio * 100).toFixed(2))
-      }
-    })
-    .sort((a, b) => b.value - a.value)
-}
-
-/**
  * 计算资源集中度（Top N 面积占比）
  */
 export function calculateAreaConcentration(data: GardenData[], topN: number = 10): {

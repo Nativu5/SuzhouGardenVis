@@ -12,13 +12,8 @@ import BarChart from '@/components/charts/BarChart.vue'
 import StackedBarChart from '@/components/charts/StackedBarChart.vue'
 import MetricCard from './MetricCard.vue'
 import {
-  groupByDistrict,
   generateDistrictHeritageLevelMatrix,
-  calculateHighLevelHeritageRatio,
-  calculateRank,
-  calculatePercentage,
-  formatNumber,
-  formatRank
+  calculateHighLevelHeritageRatio
 } from '@/utils/chartDataProcessor'
 import {
   getDistrictColor,
@@ -41,22 +36,6 @@ const worldHeritageGardens = computed(() => {
 // 区县×文保级别矩阵热力图数据
 const districtHeritageLevelMatrix = computed(() => {
   return generateDistrictHeritageLevelMatrix(data.value)
-})
-
-// 园林密度对比（个/平方公里）
-const gardenDensityByDistrict = computed(() => {
-  const result = store.districtStatistics
-    .map(district => ({
-      name: district.name,
-      value: parseFloat(district.gardenDensity.toFixed(2))
-    }))
-    .filter(item => item.value > 0)
-    .sort((a, b) => b.value - a.value)
-
-  return {
-    data: result,
-    colors: result.map(item => getDistrictColor(item.name))
-  }
 })
 
 // 园林占比/面积占比比值（集中度比值）
@@ -146,8 +125,6 @@ const heritageLevelComposition = computed(() => {
 const metrics = computed(() => {
   const totalCount = data.value.length
   const heritageCount = worldHeritageGardens.value.length
-  const totalArea = data.value.reduce((sum, item) => sum + item.area, 0)
-  const topDistrict = gardenDensityByDistrict.value.data[0]
   const highLevelRatio = calculateHighLevelHeritageRatio(data.value)
 
   // 计算姑苏区的集中度比值
@@ -304,21 +281,21 @@ const coreScatterTooltipFormatter = (params: any) => {
 
     <!-- 关键结论条 -->
     <div class="mb-6 grid grid-cols-3 gap-4">
-      <div class="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-lg p-4">
+      <div class="bg-linear-to-r from-red-50 to-red-100 border border-red-200 rounded-lg p-4">
         <div class="text-xs text-red-600 font-medium mb-1">空间集中度</div>
         <div class="text-lg font-bold text-red-800">
           姑苏区占地约 {{ keyInsights.gususAreaRatio }}，却拥有 {{ keyInsights.gususGardenRatio }} 园林
         </div>
         <div class="text-xs text-red-600 mt-1">集中度比值约 {{ keyInsights.concentrationRatio }}</div>
       </div>
-      <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 rounded-lg p-4">
+      <div class="bg-linear-to-r from-yellow-50 to-yellow-100 border border-yellow-200 rounded-lg p-4">
         <div class="text-xs text-yellow-600 font-medium mb-1">遗产核心</div>
         <div class="text-lg font-bold text-yellow-800">
           世界遗产全部分布于{{ keyInsights.worldHeritageLocation }}
         </div>
         <div class="text-xs text-yellow-600 mt-1">遗产核心高度单极化</div>
       </div>
-      <div class="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-lg p-4">
+      <div class="bg-linear-to-r from-green-50 to-green-100 border border-green-200 rounded-lg p-4">
         <div class="text-xs text-green-600 font-medium mb-1">高等级遗产</div>
         <div class="text-lg font-bold text-green-800">
           核心区高等级遗产占比显著更高

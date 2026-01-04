@@ -38,7 +38,7 @@ const props = withDefaults(defineProps<Props>(), {
   loading: false,
   xAxisType: 'value',
   yAxisType: 'value',
-  sizeRange: [10, 60],
+  sizeRange: () => [10, 60] as [number, number],
   showLegend: true
 })
 

@@ -140,7 +140,7 @@ const metrics = computed(() => {
 
     <!-- 关键结论条 -->
     <div class="mb-6 grid grid-cols-2 gap-4">
-      <div class="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-lg p-4">
+      <div class="bg-linear-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-lg p-4">
         <div class="text-xs text-purple-600 font-medium mb-1">认定节奏</div>
         <div class="text-lg font-bold text-purple-800">
           现代园林集中在后期批次（3/4）

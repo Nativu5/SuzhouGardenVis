@@ -13,9 +13,7 @@ import MetricCard from './MetricCard.vue'
 import {
   groupByOwnershipAndOpenStatus,
   groupByCurrentUseAndOpenStatus,
-  groupByDistrictAndOpenStatus,
-  calculateRank,
-  formatRank
+  groupByDistrictAndOpenStatus
 } from '@/utils/chartDataProcessor'
 import {
   getOpenStatusColor,
@@ -233,21 +231,21 @@ const districtOpenTooltipFormatter = (params: any) => {
 
     <!-- 关键结论条 -->
     <div class="mb-6 grid grid-cols-3 gap-4">
-      <div class="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4">
+      <div class="bg-linear-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4">
         <div class="text-xs text-blue-600 font-medium mb-1">权属差异</div>
         <div class="text-lg font-bold text-blue-800">
           国有园林开放率显著高于私有/企业
         </div>
         <div class="text-xs text-blue-600 mt-1">结构性差异明显</div>
       </div>
-      <div class="bg-gradient-to-r from-rose-50 to-rose-100 border border-rose-200 rounded-lg p-4">
+      <div class="bg-linear-to-r from-rose-50 to-rose-100 border border-rose-200 rounded-lg p-4">
         <div class="text-xs text-rose-600 font-medium mb-1">用途限制</div>
         <div class="text-lg font-bold text-rose-800">
           私人用途几乎不开放
         </div>
         <div class="text-xs text-rose-600 mt-1">公共可达性受用途结构限制</div>
       </div>
-      <div class="bg-gradient-to-r from-emerald-50 to-emerald-100 border border-emerald-200 rounded-lg p-4">
+      <div class="bg-linear-to-r from-emerald-50 to-emerald-100 border border-emerald-200 rounded-lg p-4">
         <div class="text-xs text-emerald-600 font-medium mb-1">空间公平</div>
         <div class="text-lg font-bold text-emerald-800">
           区县间人均可达性差异显著

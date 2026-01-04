@@ -7,7 +7,6 @@
 import { computed } from 'vue'
 import BaseChart from './BaseChart.vue'
 import type { EChartsOption } from '@/config/echarts'
-import echarts from '@/config/echarts'
 
 interface BoxPlotRawData {
   category: string
@@ -64,8 +63,8 @@ const processedData = computed(() => {
 
     const q1Index = Math.floor(values.length * 0.25)
     const q3Index = Math.floor(values.length * 0.75)
-    const q1 = values[q1Index] || values[0]
-    const q3 = values[q3Index] || values[values.length - 1]
+    const q1 = values[q1Index] ?? values[0] ?? 0
+    const q3 = values[q3Index] ?? values[values.length - 1] ?? 0
     const iqr = q3 - q1
     const lowerBound = q1 - 1.5 * iqr
     const upperBound = q3 + 1.5 * iqr
@@ -97,11 +96,11 @@ const chartOption = computed<EChartsOption>(() => {
           return `
             <div style="padding: 4px;">
               <div style="font-weight: 600; margin-bottom: 4px;">${params.name}</div>
-              <div>最大值: ${data[4].toLocaleString()}</div>
-              <div>上四分位: ${data[3].toLocaleString()}</div>
-              <div>中位数: ${data[2].toLocaleString()}</div>
-              <div>下四分位: ${data[1].toLocaleString()}</div>
-              <div>最小值: ${data[0].toLocaleString()}</div>
+              <div>最大值: ${(data[4] ?? 0).toLocaleString()}</div>
+              <div>上四分位: ${(data[3] ?? 0).toLocaleString()}</div>
+              <div>中位数: ${(data[2] ?? 0).toLocaleString()}</div>
+              <div>下四分位: ${(data[1] ?? 0).toLocaleString()}</div>
+              <div>最小值: ${(data[0] ?? 0).toLocaleString()}</div>
             </div>
           `
         } else if (params.componentSubType === 'scatter') {
@@ -154,7 +153,7 @@ const chartOption = computed<EChartsOption>(() => {
     series: [
       {
         type: 'boxplot',
-        data: processedData.value.boxData,
+        data: processedData.value.boxData as any,
         itemStyle: {
           color: '#91CC75',
           borderColor: '#5AA65F'
@@ -168,7 +167,7 @@ const chartOption = computed<EChartsOption>(() => {
       },
       {
         type: 'scatter',
-        data: processedData.value.outliers,
+        data: processedData.value.outliers as any,
         itemStyle: {
           color: '#EE6666',
           opacity: 0.6

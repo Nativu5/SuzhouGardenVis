@@ -131,14 +131,14 @@ const keyInsights = computed(() => {
 
     <!-- 关键结论条 -->
     <div class="mb-6 grid grid-cols-2 gap-4">
-      <div class="bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-lg p-4">
+      <div class="bg-linear-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-lg p-4">
         <div class="text-xs text-orange-600 font-medium mb-1">资源集中度</div>
         <div class="text-lg font-bold text-orange-800">
           Top10 园林占总面积约 {{ keyInsights.top10Percentage }}%，呈显著集中
         </div>
         <div class="text-xs text-orange-600 mt-1">少数大园林占据近半面积</div>
       </div>
-      <div class="bg-gradient-to-r from-teal-50 to-teal-100 border border-teal-200 rounded-lg p-4">
+      <div class="bg-linear-to-r from-teal-50 to-teal-100 border border-teal-200 rounded-lg p-4">
         <div class="text-xs text-teal-600 font-medium mb-1">规模与开放性</div>
         <div class="text-lg font-bold text-teal-800">
           开放园林平均面积 {{ keyInsights.openAvgArea.toLocaleString() }} ㎡ > 不开放 {{ keyInsights.closedAvgArea.toLocaleString() }} ㎡
