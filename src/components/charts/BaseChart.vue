@@ -5,8 +5,8 @@
  */
 
 import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
-import * as echarts from 'echarts'
-import type { EChartsOption } from 'echarts'
+import echarts from '@/config/echarts'
+import type { EChartsOption } from '@/config/echarts'
 import { ECHARTS_THEME } from '@/config/theme'
 
 interface Props {

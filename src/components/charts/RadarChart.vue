@@ -5,7 +5,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import BaseChart from './BaseChart.vue'
-import type { EChartsOption } from 'echarts'
+import type { EChartsOption } from '@/config/echarts'
 import type { DistrictStatistics } from '@/types'
 
 interface Props {

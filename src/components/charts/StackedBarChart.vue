@@ -6,7 +6,7 @@
 
 import { computed } from 'vue'
 import BaseChart from './BaseChart.vue'
-import type { EChartsOption } from 'echarts'
+import type { EChartsOption } from '@/config/echarts'
 
 interface SeriesData {
   name: string  // 系列名称（如：国家级、省级等）

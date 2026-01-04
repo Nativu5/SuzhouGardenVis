@@ -15,8 +15,6 @@ import {
   groupByCurrentUseAndOpenStatus,
   groupByDistrictAndOpenStatus,
   calculateRank,
-  calculatePercentage,
-  formatNumber,
   formatRank
 } from '@/utils/chartDataProcessor'
 import {
