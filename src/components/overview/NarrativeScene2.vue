@@ -24,12 +24,29 @@ const store = useGardenStore()
 // 使用过滤后的数据
 const data = computed(() => store.filteredData)
 
-// 早期年代园林（明代及以前）
+// 早期年代园林（宋代及以前）
 const earlyGardens = computed(() => {
   return data.value
-    .filter(item => item.eraCategory === '明代以前' || item.eraCategory === '明代')
-    .sort((a, b) => a.constructionPeriod.localeCompare(b.constructionPeriod))
+    .filter(item => item.eraCategory === '宋代及以前')
+    .sort((a, b) => {
+      // 同为宋代及以前，尝试根据具体朝代排序
+      const subOrder: Record<string, number> = { '春秋': 1, '汉': 2, '南朝': 3, '南北朝': 3, '宋': 4 }
+      const getSubRank = (period: string) => {
+        for (const [key, rank] of Object.entries(subOrder)) {
+          if (period.includes(key)) return rank
+        }
+        return 99 // 未知
+      }
+      return getSubRank(a.constructionPeriod) - getSubRank(b.constructionPeriod)
+    })
 })
+
+// 年代排序辅助函数
+const getEraRank = (era: string): number => {
+  const order = ['宋代及以前', '元代', '明代', '清代', '民国', '现代']
+  const index = order.indexOf(era)
+  return index === -1 ? 999 : index
+}
 
 // 按建造年代统计
 const gardenByEra = computed(() => {
@@ -68,12 +85,29 @@ const batchEraData = computed(() => {
 const metrics = computed(() => {
   const totalCount = data.value.length
   const earlyCount = earlyGardens.value.length
-  const oldestGarden = data.value.reduce((oldest, current) => {
-    if (!oldest || current.constructionPeriod < oldest.constructionPeriod) {
-      return current
+  
+  // 寻找最早的园林
+  const sortedByEra = [...data.value].sort((a, b) => {
+    const rankA = getEraRank(a.eraCategory)
+    const rankB = getEraRank(b.eraCategory)
+    if (rankA !== rankB) return rankA - rankB
+    
+    // 同年代分类，尝试更细粒度排序（针对宋代及以前）
+    if (a.eraCategory === '宋代及以前') {
+      const subOrder: Record<string, number> = { '春秋': 1, '汉': 2, '南朝': 3, '南北朝': 3, '宋': 4 }
+      const getSubRank = (period: string) => {
+        for (const [key, rank] of Object.entries(subOrder)) {
+          if (period.includes(key)) return rank
+        }
+        return 99
+      }
+      return getSubRank(a.constructionPeriod) - getSubRank(b.constructionPeriod)
     }
-    return oldest
-  }, data.value[0])
+    
+    return 0
+  })
+  
+  const oldestGarden = sortedByEra[0]
 
   const batchCount = new Set(data.value.map(item => item.publicationBatch)).size
 
@@ -164,7 +198,7 @@ const metrics = computed(() => {
     <!-- 早期年代园林清单表格 -->
     <div class="bg-white rounded-lg border border-gray-200 p-4">
       <h3 class="text-lg font-semibold text-gray-900 mb-4">
-        早期年代园林清单（明代及以前）
+        早期园林清单（宋代及以前）
       </h3>
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">

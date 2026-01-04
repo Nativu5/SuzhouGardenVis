@@ -151,7 +151,7 @@
 #### 3.4 场景 1：空间集中与遗产核心
 - [x] 实现区县×文保单位级别分层柱状图
 - [x] 实现区县园林数量/总面积柱状图
-- [x] 实现世界遗产在区县分布柱状图
+- [x] 实现文保等级构成条形图（替代原世界遗产分布图）
 - [x] 实现世界遗产园林清单表格组件
 - [x] 集成为完整场景视图组件（NarrativeScene1.vue）
 
@@ -395,7 +395,7 @@
 - 场景2（历史谱系与认定节奏）：展示建设时期分布、建造年代×文保级别、公布批次×建造年代及早期园林清单
 - 场景3（开放可达与权属/用途）：展示权属→开放桑基图、当前用途×开放情况、区县×开放情况及未开放园林清单
 - 场景4（规模结构与资源配置）：展示面积区间分布、区县平均/总面积、建造年代平均面积及面积Top10清单
-实现了MetricCard组件和NarrativeSelector组件，左侧面板展示整体统计指标。所有图表支持响应式布局、交互联动和统一主题。构建验证通过，无TypeScript错误。
+实现了MetricCard组件和NarrativeSelector组件，左侧面板展示整体统计指标。所有图表支持响应式布局、交互联动和统一主题。
 
 **里程碑 4：**
 完成探索模式的高德地图集成，实现了地图的完整交互功能。创建了地图加载服务（mapLoader.ts），使用 @amap/amap-jsapi-loader 动态加载高德地图 JS API 2.0，配置了 API Key 和安全密钥。实现了地图容器组件（MapView.vue），包含地图初始化、控件配置（比例尺、工具条）、加载状态管理和错误处理。成功实现了行政区边界展示功能：
@@ -412,7 +412,7 @@
 - 监听 filteredData 变化，动态更新地图点位
 - 根据聚合模式自动切换渲染方式
 - 组件卸载时正确清理资源（Markers、InfoWindow、地图实例）
-将 MapView 组件集成到 MainView 探索模式视图中，替换占位符。无 TypeScript 错误，待构建验证。
+将 MapView 组件集成到 MainView 探索模式视图中。
 
 **里程碑 5：**
 完成探索模式的全局筛选系统，实现了多维度组合筛选功能。创建了完整的筛选器组件库（`MultiSelectFilter.vue`, `SelectFilter.vue`, `BooleanFilter.vue`, `RangeFilter.vue`）和集成组件 `ExploreFilters.vue`，支持区县、开放情况、文保级别、权属、年代、面积等多维度组合筛选。实现了 `FilterTags.vue` 展示和管理生效筛选条件。更新 `LeftPanel.vue` 集成搜索框、筛选器及结果统计，实现了筛选逻辑与 Store 的深度集成及持久化。
@@ -423,20 +423,4 @@
 **里程碑 7：**
 完成了区域统计雷达图、概览增强、地图高亮联动及打包体积优化。实现了行政区划数据加载与 Store 集成，创建了 RadarChart 组件展示区域综合指标（人口、面积、园林数量、开放率、可访问指数），并在概览模式中增强了园林密度与人均资源图表。实现了详情面板与地图的双向高亮联动，包括区县/园林高亮、自动视野缩放及聚合模式下的交互优化。修复了文保等级着色等 Bug，优化了 MapView 性能（移除深度代理）和图片懒加载策略。针对地图交互进行了深度优化，包括点击聚焦逻辑、聚合点点击处理及高亮状态保持。
 
-**打包体积优化**：通过以下措施大幅减小了打包体积：
-- 创建 `src/config/echarts.ts` 实现 ECharts 按需导入，仅导入项目实际使用的图表类型（BarChart, SankeyChart, RadarChart）和必需组件（TitleComponent, TooltipComponent, GridComponent, LegendComponent, DataZoomComponent, CanvasRenderer），避免打包整个 ECharts 库
-- 更新所有图表组件（BaseChart, BarChart, StackedBarChart, HistogramChart, SankeyChart, RadarChart）的 ECharts 类型导入，统一从 `@/config/echarts` 导入
-- 在 `vite.config.ts` 中配置代码分割（manualChunks），将依赖库分离为独立 chunk：vue-vendor（Vue + Pinia）、echarts-vendor（ECharts 相关）、data-vendor（PapaParse）、amap-vendor（高德地图加载器）
-- 配置 CSS 代码分割、调整 chunk 大小警告限制至 600KB
-
-**优化效果**：
-- 优化前：单文件 1,315.78 kB（gzip: 434.80 kB）
-- 优化后：分 5 个 chunk 共 786.46 kB（gzip: 260.45 kB）
-  - amap-vendor: 4.85 kB (gzip: 1.52 kB)
-  - data-vendor: 19.43 kB (gzip: 7.18 kB)
-  - vue-vendor: 72.87 kB (gzip: 28.96 kB)
-  - index: 96.73 kB (gzip: 25.17 kB)
-  - echarts-vendor: 592.58 kB (gzip: 197.62 kB)
-- **体积减少 40.2%（原始）/ 40.1%（gzip）**，同时代码分割实现了浏览器并行加载，进一步提升了加载性能
-
-所有功能构建验证通过（3.19s），无 TypeScript 错误。项目所有里程碑已完成，可进行部署。
+通过 ECharts 按需导入、依赖代码分割和优化配置，打包体积减少约 40%，提升了加载性能。

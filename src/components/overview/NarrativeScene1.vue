@@ -81,13 +81,27 @@ const districtHeritageData = computed(() => {
   }
 })
 
-// 世界遗产在各区县的分布
-const worldHeritageByDistrict = computed(() => {
-  const heritageData = data.value.filter(item => item.isWorldHeritage)
-  const result = groupByDistrict(heritageData)
+// 文保等级构成
+const heritageLevelComposition = computed(() => {
+  const levelMap = new Map<string, number>()
+  data.value.forEach(item => {
+    const level = item.heritageLevel || '未定级'
+    levelMap.set(level, (levelMap.get(level) || 0) + 1)
+  })
+  
+  const order = ['全国', '省级', '市级', '县级', '未定级']
+  
+  const result = Array.from(levelMap.entries())
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => {
+       const indexA = order.indexOf(a.name)
+       const indexB = order.indexOf(b.name)
+       return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB)
+    })
+
   return {
     data: result,
-    colors: result.map(item => getDistrictColor(item.name))
+    colors: result.map(item => getHeritageLevelColor(item.name))
   }
 })
 
@@ -205,40 +219,6 @@ const areaTooltipFormatter = (params: any) => {
     </div>
   `
 }
-
-// 世界遗产分布tooltip
-const heritageTooltipFormatter = (params: any) => {
-  if (!params || params.length === 0) return ''
-  const param = params[0]
-  const districtName = param.name
-  const heritageCount = param.value
-
-  const totalHeritage = worldHeritageGardens.value.length
-  const percentage = calculatePercentage(heritageCount, totalHeritage)
-
-  const filterHint = hasActiveFilters.value ? `（基于筛选的${data.value.length}座园林）` : `（基于全部${store.rawData.length}座园林）`
-
-  return `
-    <div style="padding: 8px; min-width: 180px;">
-      <div style="font-weight: 600; font-size: 14px; color: #111827; margin-bottom: 6px; border-bottom: 1px solid #E5E7EB; padding-bottom: 4px;">
-        ${districtName}
-      </div>
-      <div style="font-size: 13px; line-height: 1.6; color: #374151;">
-        <div style="margin-bottom: 3px;">
-          <span style="color: #6B7280;">世界遗产：</span>
-          <span style="font-weight: 600; color: #EF4444;">${heritageCount} 座</span>
-        </div>
-        <div style="margin-bottom: 3px;">
-          <span style="color: #6B7280;">占总遗产：</span>
-          <span style="font-weight: 600; color: #10B981;">${percentage}</span>
-        </div>
-      </div>
-      <div style="margin-top: 6px; padding-top: 4px; border-top: 1px solid #F3F4F6; font-size: 11px; color: #9CA3AF;">
-        ${filterHint}
-      </div>
-    </div>
-  `
-}
 </script>
 
 <template>
@@ -316,16 +296,16 @@ const heritageTooltipFormatter = (params: any) => {
         />
       </div>
 
-      <!-- 世界遗产在区县分布 -->
+      <!-- 文保等级构成 -->
       <div class="bg-white rounded-lg border border-gray-200 p-4">
         <BarChart
-          title="世界遗产在区县分布"
-          :data="worldHeritageByDistrict.data"
-          :colors="worldHeritageByDistrict.colors"
-          x-axis-name="区县"
-          y-axis-name="世界遗产数量"
+          title="文保等级构成"
+          :data="heritageLevelComposition.data"
+          :colors="heritageLevelComposition.colors"
+          x-axis-name="数量"
+          y-axis-name="文保级别"
           height="400px"
-          :tooltip-formatter="heritageTooltipFormatter"
+          :horizontal="true"
         />
       </div>
     </div>
