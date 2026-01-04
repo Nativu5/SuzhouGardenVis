@@ -3,7 +3,7 @@
  */
 
 import Papa from 'papaparse'
-import type { GardenRawData, GardenData, AreaRangeConfig, EraCategoryConfig } from '@/types'
+import type { GardenRawData, GardenData, AreaRangeConfig, EraCategoryConfig, DistrictRawData, DistrictData } from '@/types'
 
 // ==================== 配置常量 ====================
 
@@ -330,3 +330,64 @@ export function getAreaRangeList(): string[] {
 
 // 导出配置供其他模块使用
 export { AREA_RANGES, ERA_CATEGORIES }
+
+// ==================== 行政区划数据加载 ====================
+
+/**
+ * 转换行政区划数据
+ */
+function transformDistrictData(raw: DistrictRawData): DistrictData {
+  const parseNumber = (str: string): number => {
+    if (!str || str.trim() === '') return 0
+    const num = parseFloat(str.replace(/[^\d.]/g, ''))
+    return isNaN(num) ? 0 : num
+  }
+
+  return {
+    name: raw.地区?.trim() || '',
+    area: parseNumber(raw['土地面积(平方公里)']),
+    population: parseNumber(raw['常住人口(万人)'])
+  }
+}
+
+/**
+ * 加载并解析行政区划数据
+ * @param csvPath CSV 文件路径（默认为 /dataset/SuzhouDistricts.csv）
+ * @returns Promise<DistrictData[]>
+ */
+export async function loadDistrictData(
+  csvPath: string = '/dataset/SuzhouDistricts.csv'
+): Promise<DistrictData[]> {
+  try {
+    const response = await fetch(csvPath)
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch district CSV: ${response.status} ${response.statusText}`)
+    }
+
+    const csvText = await response.text()
+
+    return new Promise((resolve, reject) => {
+      Papa.parse<DistrictRawData>(csvText, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: (header) => header.trim(),
+        complete: (results) => {
+          try {
+            const cleanedData = results.data.map(transformDistrictData)
+            console.log(`✅ 成功加载 ${cleanedData.length} 条行政区划数据`)
+            resolve(cleanedData)
+          } catch (error) {
+            reject(error)
+          }
+        },
+        error: (error: Error) => {
+          reject(new Error(`District CSV parsing error: ${error.message}`))
+        }
+      })
+    })
+  } catch (error) {
+    console.error('❌ 行政区划数据加载失败:', error)
+    throw error
+  }
+}

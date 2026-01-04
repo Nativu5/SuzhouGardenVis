@@ -196,3 +196,35 @@ export interface EraCategoryConfig {
   label: string // 显示标签（如"明代"）
   keywords: string[] // 匹配关键词（如["明"]）
 }
+
+// ==================== 行政区划数据 ====================
+
+/**
+ * 行政区划原始数据接口（对应 SuzhouDistricts.csv 字段）
+ */
+export interface DistrictRawData {
+  地区: string
+  '土地面积(平方公里)': string
+  '常住人口(万人)': string
+}
+
+/**
+ * 行政区划数据接口（清洗后）
+ */
+export interface DistrictData {
+  name: string // 区县名称
+  area: number // 土地面积（平方公里）
+  population: number // 常住人口（万人）
+}
+
+/**
+ * 区县统计数据（含园林数据）
+ */
+export interface DistrictStatistics extends DistrictData {
+  gardenCount: number // 园林数量
+  openGardenCount: number // 开放园林数量
+  totalGardenArea: number // 园林总面积
+  openRate: number // 开放率（%）
+  gardenDensity: number // 园林密度（个/平方公里）
+  openGardenPerCapita: number // 人均开放园林数（个/万人）
+}

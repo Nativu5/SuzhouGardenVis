@@ -8,6 +8,7 @@
 import { useGardenStore } from '@/stores/gardenStore'
 import { computed } from 'vue'
 import GardenImageGallery from '@/components/detail/GardenImageGallery.vue'
+import RadarChart from '@/components/charts/RadarChart.vue'
 
 const gardenStore = useGardenStore()
 
@@ -21,6 +22,12 @@ const hasSelectedDistrict = computed(() => !!gardenStore.selectedDistrict)
 const districtGardens = computed(() => {
   if (!gardenStore.selectedDistrict) return []
   return gardenStore.getGardensByDistrict(gardenStore.selectedDistrict)
+})
+
+// 选中区县的统计数据（用于雷达图）
+const selectedDistrictStats = computed(() => {
+  if (!gardenStore.selectedDistrict) return null
+  return gardenStore.districtStatistics.find(d => d.name === gardenStore.selectedDistrict)
 })
 
 // 判断是否有筛选条件生效
@@ -112,6 +119,17 @@ const handleClose = () => {
         </div>
       </div>
 
+      <!-- 区域雷达图 -->
+      <div v-if="selectedDistrictStats" class="p-4 bg-white border-b border-gray-200">
+        <h4 class="text-sm font-semibold text-gray-700 mb-3">
+          区域综合指标
+          <span v-if="hasActiveFilters" class="text-xs text-gray-500 font-normal ml-2">
+            （基于筛选结果）
+          </span>
+        </h4>
+        <RadarChart :data="selectedDistrictStats" height="280px" />
+      </div>
+
       <!-- 园林列表 -->
       <div class="flex-1 overflow-y-auto p-4">
         <h4 class="text-sm font-semibold text-gray-700 mb-3">区域内园林</h4>
@@ -137,10 +155,10 @@ const handleClose = () => {
               <span
                 :class="[
                   'px-2 py-0.5 rounded',
-                  garden.heritageLevel === '全国重点' ? 'bg-red-100 text-red-700' :
+                  garden.heritageLevel === '全国' ? 'bg-red-100 text-red-700' :
                   garden.heritageLevel === '省级' ? 'bg-orange-100 text-orange-700' :
                   garden.heritageLevel === '市级' ? 'bg-yellow-100 text-yellow-700' :
-                  garden.heritageLevel === '区级' ? 'bg-blue-100 text-blue-700' :
+                  garden.heritageLevel === '县级' ? 'bg-blue-100 text-blue-700' :
                   'bg-gray-100 text-gray-600'
                 ]"
               >

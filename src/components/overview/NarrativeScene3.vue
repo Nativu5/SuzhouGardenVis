@@ -8,6 +8,7 @@ import { computed } from 'vue'
 import { useGardenStore } from '@/stores/gardenStore'
 import StackedBarChart from '@/components/charts/StackedBarChart.vue'
 import SankeyChart from '@/components/charts/SankeyChart.vue'
+import BarChart from '@/components/charts/BarChart.vue'
 import MetricCard from './MetricCard.vue'
 import {
   groupByOwnershipAndOpenStatus,
@@ -15,7 +16,8 @@ import {
   groupByDistrictAndOpenStatus
 } from '@/utils/chartDataProcessor'
 import {
-  getOpenStatusColor
+  getOpenStatusColor,
+  getDistrictColor
 } from '@/config/theme'
 
 const store = useGardenStore()
@@ -56,6 +58,22 @@ const districtOpenData = computed(() => {
       ...s,
       color: getOpenStatusColor(s.name)
     }))
+  }
+})
+
+// 区县人均开放资源（个/万人）
+const openGardenPerCapitaByDistrict = computed(() => {
+  const result = store.districtStatistics
+    .map(district => ({
+      name: district.name,
+      value: parseFloat(district.openGardenPerCapita.toFixed(2))
+    }))
+    .filter(item => item.value > 0)
+    .sort((a, b) => b.value - a.value)
+
+  return {
+    data: result,
+    colors: result.map(item => getDistrictColor(item.name))
   }
 })
 
@@ -135,13 +153,25 @@ const metrics = computed(() => {
       </div>
 
       <!-- 区县×开放情况分层柱状图 -->
-      <div class="bg-white rounded-lg border border-gray-200 p-4 col-span-2">
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
         <StackedBarChart
           title="区县×开放情况"
           :categories="districtOpenData.categories"
           :series="districtOpenData.series"
           x-axis-name="区县"
           y-axis-name="园林数量"
+          height="400px"
+        />
+      </div>
+
+      <!-- 区县人均开放资源 -->
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <BarChart
+          title="区县人均开放资源"
+          :data="openGardenPerCapitaByDistrict.data"
+          :colors="openGardenPerCapitaByDistrict.colors"
+          x-axis-name="区县"
+          y-axis-name="人均开放园林 (个/万人)"
           height="400px"
         />
       </div>

@@ -28,6 +28,14 @@ let markerCluster: any = null
 // InfoWindow 实例
 let infoWindow: any = null
 
+// 元素引用映射（用于高亮联动）
+// 使用普通 Map 而非 ref，避免 Vue 深度代理导致的性能问题
+const districtPolygonMap = new Map<string, any[]>()
+
+// 当前高亮的元素
+let highlightedPolygon: any = null
+let highlightedMarker: any = null
+
 // 加载状态
 const isLoading = ref(true)
 const loadError = ref<string | null>(null)
@@ -36,6 +44,8 @@ const loadError = ref<string | null>(null)
 const isClusterMode = ref(true)
 // 是否显示行政区遮罩
 const isShowDistrictMask = ref(true)
+// 标记是否为地图交互触发的选中（用于控制聚焦行为）
+const isMapInteraction = ref(false)
 
 // 初始化地图
 const initMap = async () => {
@@ -179,6 +189,12 @@ const loadDistrictBoundaries = async () => {
         })
 
         polygons.push(polygon)
+
+        // 保存到映射中（用于高亮联动）
+        if (!districtPolygonMap.has(districtName)) {
+          districtPolygonMap.set(districtName, [])
+        }
+        districtPolygonMap.get(districtName)!.push(polygon)
       })
     })
 
@@ -289,6 +305,7 @@ const createGardenMarker = (garden: GardenData): any => {
   // 添加点击事件
   marker.on('click', () => {
     console.log('点击园林:', garden.name)
+    isMapInteraction.value = true // 标记为地图交互
     showGardenInfo(garden, [garden.longitude, garden.latitude])
     // 触发右侧详情区显示园林详情
     gardenStore.selectGarden(garden)
@@ -398,11 +415,44 @@ const loadGardenMarkersWithCluster = (gardens: GardenData[]) => {
       if (clusterData && clusterData.length === 1) {
         const garden = clusterData[0]
         console.log('点击园林:', garden.name)
+        isMapInteraction.value = true // 标记为地图交互
         showGardenInfo(garden, [garden.longitude, garden.latitude])
         // 触发右侧详情区显示园林详情
         gardenStore.selectGarden(garden)
+      } else if (clusterData && clusterData.length > 1) {
+        // 如果点击的是聚合点，计算边界并缩放以显示所有点
+        console.log('点击聚合点，包含数量:', clusterData.length)
+        
+        // 计算边界
+        let minLng = 180, maxLng = -180, minLat = 90, maxLat = -90
+        clusterData.forEach((item: any) => {
+          let lng, lat
+          // 兼容 AMap 可能将 lnglat 转换为对象的情况
+          if (Array.isArray(item.lnglat)) {
+            lng = item.lnglat[0]
+            lat = item.lnglat[1]
+          } else if (item.lnglat && typeof item.lnglat.lng === 'number') {
+            lng = item.lnglat.lng
+            lat = item.lnglat.lat
+          } else {
+            return // 跳过无效数据
+          }
+          
+          minLng = Math.min(minLng, lng)
+          maxLng = Math.max(maxLng, lng)
+          minLat = Math.min(minLat, lat)
+          maxLat = Math.max(maxLat, lat)
+        })
+
+        // 如果点非常接近（或者完全重合），直接放大
+        if (maxLng - minLng < 0.0001 && maxLat - minLat < 0.0001) {
+          mapInstance.setZoomAndCenter(mapInstance.getZoom() + 2, e.lnglat, true, 500)
+        } else {
+          // 否则缩放到包含所有点的边界
+          const bounds = new AMap.Bounds([minLng, minLat], [maxLng, maxLat])
+          mapInstance.setBounds(bounds, false, [50, 50, 50, 50]) // 留白 50px
+        }
       }
-      // 如果点击的是聚合点，默认会放大，不需要额外处理
     })
 
     console.log(`✅ 已添加 ${clusterData.length} 个园林点位（聚合模式）`)
@@ -422,6 +472,128 @@ const clearMarkers = () => {
     mapInstance.remove(markersArray)
     markersArray = []
   }
+
+  // 清空高亮状态
+  if (highlightedMarker) {
+    mapInstance.remove(highlightedMarker)
+    highlightedMarker = null
+  }
+}
+
+/**
+ * 高亮区县边界（带视野缩放）
+ */
+const highlightDistrict = (districtName: string | undefined) => {
+  // 1. 恢复之前的高亮
+  if (highlightedPolygon) {
+    highlightedPolygon.forEach((polygon: any) => {
+      polygon.setOptions({
+        strokeWeight: 2,
+        strokeOpacity: 0.8,
+        strokeColor: '#1F2937',
+        fillOpacity: 0.5
+      })
+    })
+  }
+
+  // 2. 高亮新的区县
+  if (districtName) {
+    const polygons = districtPolygonMap.get(districtName)
+    if (polygons && polygons.length > 0) {
+      polygons.forEach((polygon: any) => {
+        polygon.setOptions({
+          strokeWeight: 4,
+          strokeOpacity: 1.0,
+          strokeColor: '#2563EB', // 蓝色高亮
+          fillOpacity: 0.75
+        })
+      })
+      highlightedPolygon = polygons
+
+      // 自动缩放到区县视野
+      mapInstance.setFitView(polygons, false, [100, 100, 100, 100], 500)
+      console.log(`🎯 高亮区县: ${districtName}`)
+    }
+  } else {
+    highlightedPolygon = null
+  }
+}
+
+/**
+ * 高亮园林点位（带视野缩放）
+ * @param gardenName 园林名称
+ * @param shouldFocus 是否聚焦（缩放并居中），默认为 true
+ */
+const highlightGarden = (gardenName: string | undefined, shouldFocus: boolean = true) => {
+  // 1. 清除旧的高亮 Marker
+  if (highlightedMarker) {
+    mapInstance.remove(highlightedMarker)
+    highlightedMarker = null
+  }
+
+  if (!gardenName) return
+
+  // 2. 获取园林数据
+  // 优先从 selectedGarden 获取，如果名称匹配
+  let garden: GardenData | undefined
+  if (gardenStore.selectedGarden?.name === gardenName) {
+    garden = gardenStore.selectedGarden
+  } else {
+    // 否则从 rawData 查找
+    garden = gardenStore.rawData.find(g => g.name === gardenName)
+  }
+
+  if (!garden) {
+    console.warn(`⚠️ 无法找到园林数据: ${gardenName}`)
+    return
+  }
+
+  // 3. 创建高亮 Marker
+  const color = getHeritageLevelColor(garden.heritageLevel)
+  const content = `
+    <div style="
+      position: relative;
+      width: 18px;
+      height: 18px;
+      background-color: ${color};
+      border: 3px solid #2563EB;
+      border-radius: 50%;
+      box-shadow: 0 0 12px rgba(37, 99, 235, 0.6), 0 4px 6px rgba(0,0,0,0.3);
+      cursor: pointer;
+      animation: pulse 2s infinite;
+    "></div>
+    <style>
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+    </style>
+  `
+
+  highlightedMarker = new AMap.Marker({
+    position: [garden.longitude, garden.latitude],
+    content: content,
+    offset: new AMap.Pixel(-9, -9), // 18px / 2
+    zIndex: 9999, // 确保在最上层
+    bubble: true, // 允许事件冒泡
+    extData: garden
+  })
+
+  // 绑定点击事件，保持一致性
+  highlightedMarker.on('click', () => {
+    console.log('点击高亮园林:', garden!.name)
+    isMapInteraction.value = true
+    showGardenInfo(garden!, [garden!.longitude, garden!.latitude])
+    gardenStore.selectGarden(garden)
+  })
+
+  mapInstance.add(highlightedMarker)
+
+  // 4. 聚焦
+  if (shouldFocus) {
+    mapInstance.setZoomAndCenter(16, [garden.longitude, garden.latitude], true, 500)
+  }
+  console.log(`🎯 高亮园林: ${gardenName}, 聚焦: ${shouldFocus}`)
 }
 
 // 更新园林点位
@@ -437,6 +609,12 @@ const updateGardenMarkers = (gardens: GardenData[]) => {
     loadGardenMarkersWithCluster(gardens)
   } else {
     loadGardenMarkers(gardens)
+  }
+
+  // 重新应用高亮（如果存在选中园林）
+  // 注意：这里不应该触发聚焦，以免在筛选或模式切换时打断用户视野
+  if (gardenStore.selectedGarden) {
+    highlightGarden(gardenStore.selectedGarden.name, false)
   }
 }
 
@@ -518,6 +696,30 @@ watch(
   { deep: true }
 )
 
+// 监听选中的区县，高亮显示
+watch(
+  () => gardenStore.selectedDistrict,
+  (newDistrict) => {
+    if (mapInstance && AMap && districtLayer) {
+      highlightDistrict(newDistrict)
+    }
+  }
+)
+
+// 监听选中的园林，高亮显示
+watch(
+  () => gardenStore.selectedGarden?.name,
+  (newGardenName) => {
+    if (mapInstance && AMap) {
+      // 如果是地图交互触发的，不聚焦；否则（列表点击）聚焦
+      const shouldFocus = !isMapInteraction.value
+      highlightGarden(newGardenName, shouldFocus)
+      // 重置标志位
+      isMapInteraction.value = false
+    }
+  }
+)
+
 // 组件挂载时初始化地图
 onMounted(() => {
   initMap()
@@ -539,6 +741,10 @@ onUnmounted(() => {
     mapInstance.remove(districtLayer)
     districtLayer = null
   }
+
+  // 清空映射和高亮状态
+  districtPolygonMap.clear()
+  highlightedPolygon = null
 
   // 销毁地图实例
   if (mapInstance) {

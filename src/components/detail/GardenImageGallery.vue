@@ -6,7 +6,7 @@
   - 支持图片懒加载和错误处理
 -->
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 interface Props {
   gardenName: string
@@ -39,7 +39,7 @@ const hasNoImages = computed(() =>
 
 /**
  * 加载园林图片
- * 尝试加载 01.jpg 到 10.jpg
+ * 优化策略：优先加载第一张，成功后再异步加载后续图片
  */
 const loadGardenImages = async () => {
   isLoadingImages.value = true
@@ -47,27 +47,39 @@ const loadGardenImages = async () => {
   imageLoadError.value = new Set()
   currentImageIndex.value = 0
 
-  const imagePromises: Promise<string | null>[] = []
+  // 1. 优先检查第一张图片
+  const firstImagePath = `/dataset/images/${props.gardenName}/01.jpg`
+  const firstImageExists = await checkImageExists(firstImagePath)
 
-  // 尝试加载多张图片
-  for (let i = 1; i <= MAX_IMAGES; i++) {
-    const imageNum = i.toString().padStart(2, '0') // 01, 02, 03, ...
-    const imagePath = `/dataset/images/${props.gardenName}/${imageNum}.jpg`
+  if (firstImageExists) {
+    availableImages.value.push(firstImagePath)
+    isLoadingImages.value = false // 第一张存在，立即结束 loading，让用户看到图片
 
-    imagePromises.push(
-      checkImageExists(imagePath).then(exists => exists ? imagePath : null)
-    )
+    // 2. 异步检查后续图片 (02-10)
+    // 使用 requestIdleCallback 或 setTimeout 避免阻塞主线程
+    setTimeout(async () => {
+      const subsequentPromises: Promise<string | null>[] = []
+      for (let i = 2; i <= MAX_IMAGES; i++) {
+        const imageNum = i.toString().padStart(2, '0')
+        const imagePath = `/dataset/images/${props.gardenName}/${imageNum}.jpg`
+        subsequentPromises.push(
+          checkImageExists(imagePath).then(exists => exists ? imagePath : null)
+        )
+      }
+
+      const results = await Promise.all(subsequentPromises)
+      const validImages = results.filter((path): path is string => path !== null)
+      
+      // 将后续图片追加到列表中
+      if (validImages.length > 0) {
+        availableImages.value = [...availableImages.value, ...validImages]
+      }
+    }, 100)
+  } else {
+    // 第一张不存在，认为无图
+    isLoadingImages.value = false
+    console.log(`📷 园林 ${props.gardenName}: 未找到图片 (01.jpg 不存在)`)
   }
-
-  // 等待所有图片检查完成
-  const results = await Promise.all(imagePromises)
-
-  // 过滤出存在的图片
-  availableImages.value = results.filter((path): path is string => path !== null)
-
-  isLoadingImages.value = false
-
-  console.log(`📷 园林 ${props.gardenName}: 找到 ${availableImages.value.length} 张图片`)
 }
 
 /**
@@ -118,11 +130,6 @@ const handleImageError = (url: string) => {
 watch(() => props.gardenName, () => {
   loadGardenImages()
 }, { immediate: true })
-
-// 组件挂载时加载图片
-onMounted(() => {
-  loadGardenImages()
-})
 </script>
 
 <template>

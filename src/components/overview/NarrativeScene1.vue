@@ -40,6 +40,22 @@ const gardenCountByDistrict = computed(() => {
   }
 })
 
+// 园林密度对比（个/平方公里）
+const gardenDensityByDistrict = computed(() => {
+  const result = store.districtStatistics
+    .map(district => ({
+      name: district.name,
+      value: parseFloat(district.gardenDensity.toFixed(2))
+    }))
+    .filter(item => item.value > 0)
+    .sort((a, b) => b.value - a.value)
+
+  return {
+    data: result,
+    colors: result.map(item => getDistrictColor(item.name))
+  }
+})
+
 // 按区县统计总面积
 const gardenAreaByDistrict = computed(() => {
   const result = groupAreaByDistrict(data.value)
@@ -136,14 +152,14 @@ const metrics = computed(() => {
         />
       </div>
 
-      <!-- 区县园林数量柱状图 -->
+      <!-- 园林密度对比图 -->
       <div class="bg-white rounded-lg border border-gray-200 p-4">
         <BarChart
-          title="各区县园林数量"
-          :data="gardenCountByDistrict.data"
-          :colors="gardenCountByDistrict.colors"
+          title="各区县园林密度对比"
+          :data="gardenDensityByDistrict.data"
+          :colors="gardenDensityByDistrict.colors"
           x-axis-name="区县"
-          y-axis-name="园林数量"
+          y-axis-name="园林密度 (个/km²)"
           height="400px"
         />
       </div>

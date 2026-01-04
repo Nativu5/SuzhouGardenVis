@@ -10,15 +10,20 @@ import type {
   ViewMode,
   NarrativeScene,
   SelectionState,
-  Statistics
+  Statistics,
+  DistrictData,
+  DistrictStatistics
 } from '@/types'
-import { loadGardenData } from '@/services/dataLoader'
+import { loadGardenData, loadDistrictData } from '@/services/dataLoader'
 
 export const useGardenStore = defineStore('garden', () => {
   // ==================== 状态 ====================
 
   // 原始数据
   const rawData = ref<GardenData[]>([])
+
+  // 行政区划数据
+  const districtData = ref<DistrictData[]>([])
 
   // 加载状态
   const isLoading = ref(false)
@@ -169,19 +174,63 @@ export const useGardenStore = defineStore('garden', () => {
    */
   const selectedDistrict = computed(() => selection.value.selectedDistrict)
 
+  /**
+   * 区县统计数据（含园林数据）
+   */
+  const districtStatistics = computed<DistrictStatistics[]>(() => {
+    // 使用 filteredData 计算统计（受筛选条件影响）
+    const gardens = filteredData.value
+
+    return districtData.value.map(district => {
+      // 该区县的所有园林
+      const districtGardens = gardens.filter(g => g.district === district.name)
+      // 该区县的开放园林
+      const openGardens = districtGardens.filter(g => g.openStatus === '开放')
+
+      const gardenCount = districtGardens.length
+      const openGardenCount = openGardens.length
+      const totalGardenArea = districtGardens.reduce((sum, g) => sum + g.area, 0)
+      const openRate = gardenCount > 0 ? (openGardenCount / gardenCount) * 100 : 0
+
+      // 园林密度：个/平方公里
+      const gardenDensity = district.area > 0 ? gardenCount / district.area : 0
+
+      // 人均开放园林数：个/万人
+      const openGardenPerCapita = district.population > 0 ? openGardenCount / district.population : 0
+
+      return {
+        ...district,
+        gardenCount,
+        openGardenCount,
+        totalGardenArea,
+        openRate,
+        gardenDensity,
+        openGardenPerCapita
+      }
+    })
+  })
+
   // ==================== 操作方法 ====================
 
   /**
-   * 加载数据
+   * 加载数据（园林数据 + 行政区划数据）
    */
   async function loadData() {
     isLoading.value = true
     loadError.value = null
 
     try {
-      const data = await loadGardenData()
-      rawData.value = data
-      console.log(`✅ Store: 加载了 ${data.length} 条数据`)
+      // 并行加载园林数据和区划数据
+      const [gardenDataResult, districtDataResult] = await Promise.all([
+        loadGardenData(),
+        loadDistrictData()
+      ])
+
+      rawData.value = gardenDataResult
+      districtData.value = districtDataResult
+
+      console.log(`✅ Store: 加载了 ${gardenDataResult.length} 条园林数据`)
+      console.log(`✅ Store: 加载了 ${districtDataResult.length} 条行政区划数据`)
     } catch (error) {
       loadError.value = error instanceof Error ? error.message : '数据加载失败'
       console.error('❌ Store: 数据加载失败', error)
@@ -274,6 +323,7 @@ export const useGardenStore = defineStore('garden', () => {
   return {
     // 状态
     rawData,
+    districtData,
     isLoading,
     loadError,
     viewMode,
@@ -286,6 +336,7 @@ export const useGardenStore = defineStore('garden', () => {
     statistics,
     selectedGarden,
     selectedDistrict,
+    districtStatistics,
 
     // 方法
     loadData,
