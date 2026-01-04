@@ -1,0 +1,8 @@
+{
+  // Cloudflare Pages 部署配置
+  "name": "suzhou-garden-vis",
+  "compatibility_date": "2026-01-04",
+  "assets": {
+    "directory": "./dist"
+  }
+}

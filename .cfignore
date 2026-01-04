@@ -1,0 +1,41 @@
+# Cloudflare 部署忽略文件
+# 忽略 Python 开发环境和相关文件
+
+# Python 环境
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pyproject.toml
+uv.lock
+
+# 开发工具
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 文档和归档
+docs/
+archived/
+AGENTS.md
+
+# 数据处理脚本
+scripts/
+*.py
+
+# Git
+.git/
+.gitignore
+
+# Node 开发文件
+node_modules/
+.DS_Store
+*.log
+
+# 临时文件
+*.tmp
+*.bak
