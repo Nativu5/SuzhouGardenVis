@@ -398,21 +398,7 @@
 实现了MetricCard组件和NarrativeSelector组件，左侧面板展示整体统计指标。所有图表支持响应式布局、交互联动和统一主题。
 
 **里程碑 4：**
-完成探索模式的高德地图集成，实现了地图的完整交互功能。创建了地图加载服务（mapLoader.ts），使用 @amap/amap-jsapi-loader 动态加载高德地图 JS API 2.0，配置了 API Key 和安全密钥。实现了地图容器组件（MapView.vue），包含地图初始化、控件配置（比例尺、工具条）、加载状态管理和错误处理。成功实现了行政区边界展示功能：
-- 从 archived/VIS 复制并加载 GeoJSON 行政区边界数据
-- 实现区县分级着色（基于园林数量的渐变配色）
-- 实现区县点击交互和鼠标悬停效果
-- 显示区县信息弹窗（区县名称、园林数量）
-实现了园林点位标注功能：
-- 创建自定义 Marker 样式（根据文保级别着色，使用 theme.ts 配色）
-- 集成 MarkerClusterer 实现点位聚合
-- 实现聚合/散点模式切换（带切换按钮）
-- 点击 Marker 显示园林信息弹窗（名称、区县、地址、文保级别、开放情况、建造年代、面积）
-实现了地图与 Store 数据的完整联动：
-- 监听 filteredData 变化，动态更新地图点位
-- 根据聚合模式自动切换渲染方式
-- 组件卸载时正确清理资源（Markers、InfoWindow、地图实例）
-将 MapView 组件集成到 MainView 探索模式视图中。
+完成探索模式的高德地图集成（MapView.vue），主要实现要点：使用 services/mapLoader.ts 和 @amap/amap-jsapi-loader 动态加载 AMap JS API，负责地图初始化、控件、加载与错误管理；行政区边界从 archived/VIS 的 GeoJSON 导入并按园林数量做分级着色，支持区县点击/悬停及信息弹窗；园林点位采用自定义 Marker（配色来源 theme.ts）并集成 MarkerClusterer，支持聚合/散点切换与点位信息弹窗；通过监听 Store.filteredData 实现筛选联动，依据聚合模式切换渲染策略，并在组件卸载时清理 Markers/InfoWindow/地图实例。最后将 MapView 集成进 MainView 的探索模式。
 
 **里程碑 5：**
 完成探索模式的全局筛选系统，实现了多维度组合筛选功能。创建了完整的筛选器组件库（`MultiSelectFilter.vue`, `SelectFilter.vue`, `BooleanFilter.vue`, `RangeFilter.vue`）和集成组件 `ExploreFilters.vue`，支持区县、开放情况、文保级别、权属、年代、面积等多维度组合筛选。实现了 `FilterTags.vue` 展示和管理生效筛选条件。更新 `LeftPanel.vue` 集成搜索框、筛选器及结果统计，实现了筛选逻辑与 Store 的深度集成及持久化。
