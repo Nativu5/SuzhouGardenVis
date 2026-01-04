@@ -379,3 +379,68 @@ export function groupAverageAreaByEraCategory(data: GardenData[]): { name: strin
       return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB)
     })
 }
+
+/**
+ * ============================================
+ * Tooltip 辅助函数
+ * ============================================
+ */
+
+/**
+ * 计算某个值在数组中的排名（降序）
+ * @param value 当前值
+ * @param allValues 所有值的数组
+ * @returns 排名（1-based）
+ */
+export function calculateRank(value: number, allValues: number[]): number {
+  const sortedValues = [...allValues].sort((a, b) => b - a)
+  const rank = sortedValues.indexOf(value) + 1
+  return rank > 0 ? rank : allValues.length
+}
+
+/**
+ * 计算占比百分数
+ * @param value 当前值
+ * @param total 总值
+ * @param decimals 保留小数位数，默认1位
+ * @returns 百分比字符串，如 "45.6%"
+ */
+export function calculatePercentage(value: number, total: number, decimals: number = 1): string {
+  if (total === 0) return '0%'
+  const percentage = (value / total) * 100
+  return `${percentage.toFixed(decimals)}%`
+}
+
+/**
+ * 格式化数值（添加千分位分隔符）
+ * @param value 数值
+ * @param decimals 保留小数位数，默认0位
+ * @returns 格式化后的字符串，如 "1,234.56"
+ */
+export function formatNumber(value: number, decimals: number = 0): string {
+  return value.toLocaleString('zh-CN', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  })
+}
+
+/**
+ * 生成排名后缀文本
+ * @param rank 排名
+ * @returns 排名文本，如 "第1位"
+ */
+export function formatRank(rank: number): string {
+  return `第${rank}位`
+}
+
+/**
+ * 比较值与平均值
+ * @param value 当前值
+ * @param average 平均值
+ * @returns 对比文本，如 "高于平均" / "低于平均" / "等于平均"
+ */
+export function compareToAverage(value: number, average: number): string {
+  const diff = value - average
+  if (Math.abs(diff) < 0.01) return '等于平均'
+  return diff > 0 ? '高于平均' : '低于平均'
+}

@@ -21,6 +21,7 @@ interface Props {
   height?: string
   loading?: boolean
   horizontal?: boolean  // 是否水平显示（横向柱状图）
+  tooltipFormatter?: (params: any) => string  // 自定义tooltip格式化函数
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -47,7 +48,8 @@ const chartOption = computed<EChartsOption>(() => {
       trigger: 'axis',
       axisPointer: {
         type: 'shadow'
-      }
+      },
+      formatter: props.tooltipFormatter
     },
     xAxis: props.horizontal ? {
       type: 'value',

@@ -13,7 +13,11 @@ import MetricCard from './MetricCard.vue'
 import {
   groupByOwnershipAndOpenStatus,
   groupByCurrentUseAndOpenStatus,
-  groupByDistrictAndOpenStatus
+  groupByDistrictAndOpenStatus,
+  calculateRank,
+  calculatePercentage,
+  formatNumber,
+  formatRank
 } from '@/utils/chartDataProcessor'
 import {
   getOpenStatusColor,
@@ -91,6 +95,132 @@ const metrics = computed(() => {
     closedCount
   }
 })
+
+/**
+ * Tooltip formatters
+ */
+
+// 判断是否有筛选条件生效
+const hasActiveFilters = computed(() => {
+  const filters = store.filters
+  return !!(
+    filters.searchKeyword ||
+    (filters.districts && filters.districts.length > 0) ||
+    (filters.openStatus && filters.openStatus.length > 0) ||
+    (filters.heritageLevels && filters.heritageLevels.length > 0) ||
+    (filters.ownershipTypes && filters.ownershipTypes.length > 0) ||
+    (filters.currentUses && filters.currentUses.length > 0) ||
+    (filters.isWorldHeritage !== null && filters.isWorldHeritage !== undefined) ||
+    (filters.constructionPeriods && filters.constructionPeriods.length > 0) ||
+    (filters.eraCategories && filters.eraCategories.length > 0) ||
+    (filters.publicationBatches && filters.publicationBatches.length > 0) ||
+    (filters.areaRanges && filters.areaRanges.length > 0) ||
+    (filters.areaMin !== undefined && filters.areaMin !== null) ||
+    (filters.areaMax !== undefined && filters.areaMax !== null)
+  )
+})
+
+// 人均开放资源tooltip
+const perCapitaTooltipFormatter = (params: any) => {
+  if (!params || params.length === 0) return ''
+  const param = params[0]
+  const districtName = param.name
+  const perCapitaValue = param.value
+
+  // 计算排名
+  const allValues = openGardenPerCapitaByDistrict.value.data.map(d => d.value)
+  const rank = calculateRank(perCapitaValue, allValues)
+
+  // 计算该区县的平均开放率
+  const districtStats = store.districtStatistics.find(d => d.name === districtName)
+  const openRate = districtStats ? districtStats.openRate.toFixed(1) : '0'
+
+  const filterHint = hasActiveFilters.value ? `（基于筛选的${data.value.length}座园林）` : `（基于全部${store.rawData.length}座园林）`
+
+  return `
+    <div style="padding: 8px; min-width: 180px;">
+      <div style="font-weight: 600; font-size: 14px; color: #111827; margin-bottom: 6px; border-bottom: 1px solid #E5E7EB; padding-bottom: 4px;">
+        ${districtName}
+      </div>
+      <div style="font-size: 13px; line-height: 1.6; color: #374151;">
+        <div style="margin-bottom: 3px;">
+          <span style="color: #6B7280;">人均开放园林：</span>
+          <span style="font-weight: 600; color: #10B981;">${perCapitaValue} 个/万人</span>
+        </div>
+        <div style="margin-bottom: 3px;">
+          <span style="color: #6B7280;">排名：</span>
+          <span style="font-weight: 600; color: #F59E0B;">${formatRank(rank)}</span>
+        </div>
+        <div style="margin-bottom: 3px;">
+          <span style="color: #6B7280;">开放率：</span>
+          <span style="font-weight: 600; color: ${parseFloat(openRate) >= 50 ? '#10B981' : '#F59E0B'};">${openRate}%</span>
+        </div>
+      </div>
+      <div style="margin-top: 6px; padding-top: 4px; border-top: 1px solid #F3F4F6; font-size: 11px; color: #9CA3AF;">
+        ${filterHint}
+      </div>
+    </div>
+  `
+}
+
+// 区县开放情况分层tooltip
+const districtOpenTooltipFormatter = (params: any) => {
+  if (!params || params.length === 0) return ''
+
+  const districtName = params[0].name
+  let totalCount = 0
+  let openCount = 0
+  let details = ''
+
+  // 汇总该区县的开放情况
+  params.forEach((param: any) => {
+    const statusName = param.seriesName
+    const count = param.value
+    totalCount += count
+
+    if (statusName === '开放') {
+      openCount = count
+    }
+
+    const color = getOpenStatusColor(statusName)
+    details += `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
+        <span style="display: flex; align-items: center;">
+          <span style="display: inline-block; width: 10px; height: 10px; background-color: ${color}; border-radius: 50%; margin-right: 6px;"></span>
+          <span style="color: #6B7280;">${statusName}：</span>
+        </span>
+        <span style="font-weight: 600; color: #374151; margin-left: 8px;">${count} 座</span>
+      </div>
+    `
+  })
+
+  const openRate = totalCount > 0 ? ((openCount / totalCount) * 100).toFixed(1) : '0'
+  const filterHint = hasActiveFilters.value ? `（基于筛选的${data.value.length}座园林）` : `（基于全部${store.rawData.length}座园林）`
+
+  return `
+    <div style="padding: 8px; min-width: 200px;">
+      <div style="font-weight: 600; font-size: 14px; color: #111827; margin-bottom: 6px; border-bottom: 1px solid #E5E7EB; padding-bottom: 4px;">
+        ${districtName}
+      </div>
+      <div style="font-size: 13px; line-height: 1.6; color: #374151; margin-bottom: 6px;">
+        ${details}
+      </div>
+      <div style="padding: 6px 0; border-top: 1px solid #F3F4F6; border-bottom: 1px solid #F3F4F6; margin-bottom: 6px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13px;">
+          <span style="color: #6B7280;">总计：</span>
+          <span style="font-weight: 700; color: #111827;">${totalCount} 座</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-top: 2px;">
+          <span style="color: #6B7280;">开放率：</span>
+          <span style="font-weight: 600; color: ${parseFloat(openRate) >= 50 ? '#10B981' : '#F59E0B'};">${openRate}%</span>
+        </div>
+      </div>
+      <div style="font-size: 11px; color: #9CA3AF;">
+        ${filterHint}
+      </div>
+    </div>
+  `
+}
 </script>
 
 <template>
@@ -161,6 +291,7 @@ const metrics = computed(() => {
           x-axis-name="区县"
           y-axis-name="园林数量"
           height="400px"
+          :tooltip-formatter="districtOpenTooltipFormatter"
         />
       </div>
 
@@ -173,6 +304,7 @@ const metrics = computed(() => {
           x-axis-name="区县"
           y-axis-name="人均开放园林 (个/万人)"
           height="400px"
+          :tooltip-formatter="perCapitaTooltipFormatter"
         />
       </div>
     </div>

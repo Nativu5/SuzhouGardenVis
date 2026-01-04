@@ -24,6 +24,7 @@ interface Props {
   loading?: boolean
   horizontal?: boolean  // 是否水平显示
   showLegend?: boolean  // 是否显示图例
+  tooltipFormatter?: (params: any) => string  // 自定义tooltip格式化函数
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -48,7 +49,8 @@ const chartOption = computed<EChartsOption>(() => {
       trigger: 'axis',
       axisPointer: {
         type: 'shadow'
-      }
+      },
+      formatter: props.tooltipFormatter
     },
     legend: props.showLegend ? {
       data: props.series.map(s => s.name),

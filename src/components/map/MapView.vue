@@ -249,19 +249,80 @@ const showGardenInfo = (garden: GardenData, position: [number, number]) => {
 
 // 显示区县信息弹窗
 const showDistrictInfo = (districtName: string, gardenCount: number, position: [number, number]) => {
-  const content = `
-    <div style="padding: 12px; min-width: 180px;">
-      <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #111827;">
-        ${districtName}
-      </h3>
-      <div style="font-size: 14px; color: #374151;">
-        <div style="margin-bottom: 4px;">
-          <span style="color: #6B7280;">园林数量：</span>
-          <span style="font-weight: 600; color: #5470C6;">${gardenCount}</span> 座
+  // 尝试从 districtStatistics 获取完整统计数据
+  const districtStats = gardenStore.districtStatistics.find(d => d.name === districtName)
+
+  let content = ''
+
+  if (districtStats) {
+    // 有完整统计数据，显示增强版信息
+    content = `
+      <div style="padding: 14px; min-width: 240px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 700; color: #111827; border-bottom: 2px solid #E5E7EB; padding-bottom: 8px;">
+          ${districtName}
+        </h3>
+
+        <!-- 基础信息 -->
+        <div style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #F3F4F6;">
+          <div style="font-size: 13px; color: #4B5563; line-height: 1.8;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+              <span style="color: #6B7280;">人口：</span>
+              <span style="font-weight: 600; color: #374151;">${districtStats.population.toFixed(2)} 万人</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #6B7280;">土地面积：</span>
+              <span style="font-weight: 600; color: #374151;">${districtStats.area.toFixed(1)} km²</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 园林统计 -->
+        <div style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #F3F4F6;">
+          <div style="font-size: 13px; color: #4B5563; line-height: 1.8;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+              <span style="color: #6B7280;">园林数量：</span>
+              <span style="font-weight: 700; color: #5470C6;">${districtStats.gardenCount} 座</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+              <span style="color: #6B7280;">开放园林：</span>
+              <span style="font-weight: 600; color: #10B981;">${districtStats.openGardenCount} 座</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #6B7280;">开放率：</span>
+              <span style="font-weight: 600; color: ${districtStats.openRate >= 50 ? '#10B981' : '#F59E0B'};">${districtStats.openRate.toFixed(1)}%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 密度指标 -->
+        <div style="font-size: 13px; color: #4B5563; line-height: 1.8;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+            <span style="color: #6B7280;">园林密度：</span>
+            <span style="font-weight: 600; color: #374151;">${districtStats.gardenDensity.toFixed(2)} 个/km²</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: #6B7280;">人均开放园林：</span>
+            <span style="font-weight: 600; color: #374151;">${districtStats.openGardenPerCapita.toFixed(2)} 个/万人</span>
+          </div>
         </div>
       </div>
-    </div>
-  `
+    `
+  } else {
+    // 无完整统计数据，显示简化版本
+    content = `
+      <div style="padding: 12px; min-width: 180px;">
+        <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #111827;">
+          ${districtName}
+        </h3>
+        <div style="font-size: 14px; color: #374151;">
+          <div style="margin-bottom: 4px;">
+            <span style="color: #6B7280;">园林数量：</span>
+            <span style="font-weight: 600; color: #5470C6;">${gardenCount}</span> 座
+          </div>
+        </div>
+      </div>
+    `
+  }
 
   infoWindow.setContent(content)
   infoWindow.open(mapInstance, position)

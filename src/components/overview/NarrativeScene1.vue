@@ -12,7 +12,11 @@ import MetricCard from './MetricCard.vue'
 import {
   groupByDistrict,
   groupAreaByDistrict,
-  groupByDistrictAndHeritageLevel
+  groupByDistrictAndHeritageLevel,
+  calculateRank,
+  calculatePercentage,
+  formatNumber,
+  formatRank
 } from '@/utils/chartDataProcessor'
 import {
   getDistrictColor,
@@ -101,6 +105,140 @@ const metrics = computed(() => {
     topDistrict: topDistrict ? `${topDistrict.name} (${topDistrict.value}座)` : '-'
   }
 })
+
+/**
+ * Tooltip formatters
+ */
+
+// 判断是否有筛选条件生效
+const hasActiveFilters = computed(() => {
+  const filters = store.filters
+  return !!(
+    filters.searchKeyword ||
+    (filters.districts && filters.districts.length > 0) ||
+    (filters.openStatus && filters.openStatus.length > 0) ||
+    (filters.heritageLevels && filters.heritageLevels.length > 0) ||
+    (filters.ownershipTypes && filters.ownershipTypes.length > 0) ||
+    (filters.currentUses && filters.currentUses.length > 0) ||
+    (filters.isWorldHeritage !== null && filters.isWorldHeritage !== undefined) ||
+    (filters.constructionPeriods && filters.constructionPeriods.length > 0) ||
+    (filters.eraCategories && filters.eraCategories.length > 0) ||
+    (filters.publicationBatches && filters.publicationBatches.length > 0) ||
+    (filters.areaRanges && filters.areaRanges.length > 0) ||
+    (filters.areaMin !== undefined && filters.areaMin !== null) ||
+    (filters.areaMax !== undefined && filters.areaMax !== null)
+  )
+})
+
+// 园林密度tooltip
+const densityTooltipFormatter = (params: any) => {
+  if (!params || params.length === 0) return ''
+  const param = params[0]
+  const districtName = param.name
+  const density = param.value
+
+  // 计算排名和占比
+  const allDensities = gardenDensityByDistrict.value.data.map(d => d.value)
+  const rank = calculateRank(density, allDensities)
+
+  const filterHint = hasActiveFilters.value ? `（基于筛选的${data.value.length}座园林）` : `（基于全部${store.rawData.length}座园林）`
+
+  return `
+    <div style="padding: 8px; min-width: 180px;">
+      <div style="font-weight: 600; font-size: 14px; color: #111827; margin-bottom: 6px; border-bottom: 1px solid #E5E7EB; padding-bottom: 4px;">
+        ${districtName}
+      </div>
+      <div style="font-size: 13px; line-height: 1.6; color: #374151;">
+        <div style="margin-bottom: 3px;">
+          <span style="color: #6B7280;">园林密度：</span>
+          <span style="font-weight: 600; color: #5470C6;">${density} 个/km²</span>
+        </div>
+        <div style="margin-bottom: 3px;">
+          <span style="color: #6B7280;">排名：</span>
+          <span style="font-weight: 600; color: #F59E0B;">${formatRank(rank)}</span>
+        </div>
+      </div>
+      <div style="margin-top: 6px; padding-top: 4px; border-top: 1px solid #F3F4F6; font-size: 11px; color: #9CA3AF;">
+        ${filterHint}
+      </div>
+    </div>
+  `
+}
+
+// 园林总面积tooltip
+const areaTooltipFormatter = (params: any) => {
+  if (!params || params.length === 0) return ''
+  const param = params[0]
+  const districtName = param.name
+  const areaValue = param.value
+
+  // 计算总面积和排名
+  const totalArea = data.value.reduce((sum, item) => sum + item.area, 0)
+  const allAreas = gardenAreaByDistrict.value.data.map(d => d.value)
+  const rank = calculateRank(areaValue, allAreas)
+  const percentage = calculatePercentage(areaValue, totalArea)
+
+  const filterHint = hasActiveFilters.value ? `（基于筛选的${data.value.length}座园林）` : `（基于全部${store.rawData.length}座园林）`
+
+  return `
+    <div style="padding: 8px; min-width: 180px;">
+      <div style="font-weight: 600; font-size: 14px; color: #111827; margin-bottom: 6px; border-bottom: 1px solid #E5E7EB; padding-bottom: 4px;">
+        ${districtName}
+      </div>
+      <div style="font-size: 13px; line-height: 1.6; color: #374151;">
+        <div style="margin-bottom: 3px;">
+          <span style="color: #6B7280;">总面积：</span>
+          <span style="font-weight: 600; color: #5470C6;">${formatNumber(areaValue)} ㎡</span>
+        </div>
+        <div style="margin-bottom: 3px;">
+          <span style="color: #6B7280;">占全市比：</span>
+          <span style="font-weight: 600; color: #10B981;">${percentage}</span>
+        </div>
+        <div style="margin-bottom: 3px;">
+          <span style="color: #6B7280;">排名：</span>
+          <span style="font-weight: 600; color: #F59E0B;">${formatRank(rank)}</span>
+        </div>
+      </div>
+      <div style="margin-top: 6px; padding-top: 4px; border-top: 1px solid #F3F4F6; font-size: 11px; color: #9CA3AF;">
+        ${filterHint}
+      </div>
+    </div>
+  `
+}
+
+// 世界遗产分布tooltip
+const heritageTooltipFormatter = (params: any) => {
+  if (!params || params.length === 0) return ''
+  const param = params[0]
+  const districtName = param.name
+  const heritageCount = param.value
+
+  const totalHeritage = worldHeritageGardens.value.length
+  const percentage = calculatePercentage(heritageCount, totalHeritage)
+
+  const filterHint = hasActiveFilters.value ? `（基于筛选的${data.value.length}座园林）` : `（基于全部${store.rawData.length}座园林）`
+
+  return `
+    <div style="padding: 8px; min-width: 180px;">
+      <div style="font-weight: 600; font-size: 14px; color: #111827; margin-bottom: 6px; border-bottom: 1px solid #E5E7EB; padding-bottom: 4px;">
+        ${districtName}
+      </div>
+      <div style="font-size: 13px; line-height: 1.6; color: #374151;">
+        <div style="margin-bottom: 3px;">
+          <span style="color: #6B7280;">世界遗产：</span>
+          <span style="font-weight: 600; color: #EF4444;">${heritageCount} 座</span>
+        </div>
+        <div style="margin-bottom: 3px;">
+          <span style="color: #6B7280;">占总遗产：</span>
+          <span style="font-weight: 600; color: #10B981;">${percentage}</span>
+        </div>
+      </div>
+      <div style="margin-top: 6px; padding-top: 4px; border-top: 1px solid #F3F4F6; font-size: 11px; color: #9CA3AF;">
+        ${filterHint}
+      </div>
+    </div>
+  `
+}
 </script>
 
 <template>
@@ -161,6 +299,7 @@ const metrics = computed(() => {
           x-axis-name="区县"
           y-axis-name="园林密度 (个/km²)"
           height="400px"
+          :tooltip-formatter="densityTooltipFormatter"
         />
       </div>
 
@@ -173,6 +312,7 @@ const metrics = computed(() => {
           x-axis-name="区县"
           y-axis-name="总面积 (㎡)"
           height="400px"
+          :tooltip-formatter="areaTooltipFormatter"
         />
       </div>
 
@@ -185,6 +325,7 @@ const metrics = computed(() => {
           x-axis-name="区县"
           y-axis-name="世界遗产数量"
           height="400px"
+          :tooltip-formatter="heritageTooltipFormatter"
         />
       </div>
     </div>
