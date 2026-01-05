@@ -5,6 +5,10 @@
 
 import type { GardenData } from '@/types'
 
+function compareDistrictName(a: string, b: string): number {
+  return a.localeCompare(b, 'zh-CN')
+}
+
 /**
  * 按区县分组统计园林数量
  */
@@ -18,7 +22,7 @@ export function groupByDistrict(data: GardenData[]): { name: string; value: numb
 
   return Array.from(districtMap.entries())
     .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value)
+    .sort((a, b) => compareDistrictName(a.name, b.name))
 }
 
 /**
@@ -34,7 +38,7 @@ export function groupAreaByDistrict(data: GardenData[]): { name: string; value: 
 
   return Array.from(districtMap.entries())
     .map(([name, value]) => ({ name, value: Math.round(value) }))
-    .sort((a, b) => b.value - a.value)
+    .sort((a, b) => compareDistrictName(a.name, b.name))
 }
 
 /**
@@ -58,7 +62,7 @@ export function groupByDistrictAndHeritageLevel(data: GardenData[]): {
     countMap.set(key, count + 1)
   })
 
-  const districts = Array.from(districtSet).sort()
+  const districts = Array.from(districtSet).sort(compareDistrictName)
   const order = ['全国', '省级', '市级', '县级', '未定级']
   const heritageLevels = Array.from(heritageLevelSet).sort((a, b) => {
     const indexA = order.indexOf(a)
@@ -278,7 +282,7 @@ export function groupByDistrictAndOpenStatus(data: GardenData[]): {
     countMap.set(key, count + 1)
   })
 
-  const districts = Array.from(districtSet).sort()
+  const districts = Array.from(districtSet).sort(compareDistrictName)
   const statuses = Array.from(statusSet).sort()
 
   const series = statuses.map(status => ({
@@ -351,7 +355,7 @@ export function groupAverageAreaByDistrict(data: GardenData[]): { name: string; 
       name,
       value: Math.round(stats.total / stats.count)
     }))
-    .sort((a, b) => b.value - a.value)
+    .sort((a, b) => compareDistrictName(a.name, b.name))
 }
 
 /**
@@ -474,7 +478,7 @@ export function generateDistrictHeritageLevelMatrix(data: GardenData[]): {
     districtTotalMap.set(item.district, (districtTotalMap.get(item.district) || 0) + 1)
   })
 
-  const districts = Array.from(districtSet).sort()
+  const districts = Array.from(districtSet).sort(compareDistrictName)
   const order = ['全国', '省级', '市级', '县级', '未定级']
   const heritageLevels = Array.from(heritageLevelSet).sort((a, b) => {
     const indexA = order.indexOf(a)
@@ -747,7 +751,7 @@ export function groupByDistrictAndProtectionStatus(data: GardenData[]): {
     countMap.set(key, (countMap.get(key) || 0) + 1)
   })
 
-  const districts = Array.from(districtSet).sort()
+  const districts = Array.from(districtSet).sort(compareDistrictName)
   const protections = Array.from(protectionSet).sort()
 
   const series = protections.map(protection => ({

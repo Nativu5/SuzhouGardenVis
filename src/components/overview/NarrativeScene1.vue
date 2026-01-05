@@ -60,7 +60,7 @@ const concentrationRatio = computed(() => {
       }
     })
     .filter(item => item !== null && item.value > 0)
-    .sort((a, b) => b!.value - a!.value) as Array<{
+    .sort((a, b) => a!.name.localeCompare(b!.name, 'zh-CN')) as Array<{
       name: string
       value: number
       gardenRatio: number

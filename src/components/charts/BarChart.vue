@@ -55,6 +55,14 @@ const chartOption = computed<EChartsOption>(() => {
       },
       formatter: props.tooltipFormatter
     },
+    // 与 ScatterChart 的左右留白对齐
+    grid: {
+      left: '10%',
+      right: '10%',
+      top: props.title ? 60 : 40,
+      bottom: '10%',
+      containLabel: true
+    },
     xAxis: props.horizontal ? {
       type: 'value',
       name: props.xAxisName,

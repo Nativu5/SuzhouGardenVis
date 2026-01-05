@@ -61,6 +61,14 @@ const chartOption = computed<EChartsOption>(() => {
       top: props.title ? 35 : 10,
       type: 'scroll'
     } : undefined,
+    // 与 ScatterChart 的左右留白对齐
+    grid: {
+      left: '10%',
+      right: '10%',
+      top: props.title ? (props.showLegend ? 85 : 60) : (props.showLegend ? 60 : 40),
+      bottom: '10%',
+      containLabel: true
+    },
     xAxis: props.horizontal ? {
       type: 'value',
       name: props.xAxisName,

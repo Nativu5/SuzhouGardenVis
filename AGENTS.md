@@ -458,6 +458,8 @@
     - 更新 MainView 组件，集成 NarrativeScene5 渲染逻辑
   - ✅ 修复柱状图横轴名称被裁切：将 xAxisName（如“区县”）固定放到坐标轴下方，并增加底部留白（BarChart/StackedBarChart）
   - ✅ 调整柱状图 X 轴标签不旋转：固定 rotate=0，避免标签倾斜导致阅读负担
+  - ✅ 统一区县类图表排序：所有 X 轴为“区县”的图表按字典序排序
+  - ✅ 对齐图表外围留白：BarChart/StackedBarChart 的 grid（左右/底部）与 ScatterChart 对齐
 
 ## 下一步计划
 - 所有场景强化工作已完成 🎉
