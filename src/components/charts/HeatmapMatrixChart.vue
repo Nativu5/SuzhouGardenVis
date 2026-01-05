@@ -94,7 +94,8 @@ const chartOption = computed<EChartsOption>(() => {
       },
       axisLabel: {
         interval: 0,
-        rotate: props.xCategories.length > 6 ? 45 : 0
+        rotate: props.xCategories.length > 8 ? 45 : 0,
+        margin: 12
       }
     },
     yAxis: {
@@ -114,9 +115,11 @@ const chartOption = computed<EChartsOption>(() => {
       min: 0,
       max: maxValue,
       calculable: true,
-      orient: 'horizontal',
-      left: 'center',
-      bottom: 20,
+      orient: 'vertical',
+      right: 12,
+      top: 'middle',
+      itemWidth: 12,
+      itemHeight: 120,
       inRange: {
         color: ['#E0F0E3', '#91CC75', '#5AA65F', '#3D8B40', '#2A6B2D']
       },

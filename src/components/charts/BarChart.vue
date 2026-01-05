@@ -39,6 +39,10 @@ const chartOption = computed<EChartsOption>(() => {
   const categories = props.data.map(item => item.name)
   const values = props.data.map(item => item.value)
 
+  // 不旋转 X 轴标签；不新增 grid（避免下方留白过多）
+  const xAxisNameGap = 22
+  const axisLabelMargin = 8
+
   const option: EChartsOption = {
     title: props.title ? {
       text: props.title,
@@ -53,14 +57,19 @@ const chartOption = computed<EChartsOption>(() => {
     },
     xAxis: props.horizontal ? {
       type: 'value',
-      name: props.xAxisName
+      name: props.xAxisName,
+      nameLocation: 'middle',
+      nameGap: xAxisNameGap
     } : {
       type: 'category',
       data: categories,
       name: props.xAxisName,
+      nameLocation: 'middle',
+      nameGap: xAxisNameGap,
       axisLabel: {
         interval: 0,
-        rotate: categories.length > 6 ? 45 : 0
+        rotate: 0,
+        margin: axisLabelMargin
       }
     },
     yAxis: props.horizontal ? {

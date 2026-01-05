@@ -40,6 +40,10 @@ const emit = defineEmits<{
 
 // 生成 ECharts 配置
 const chartOption = computed<EChartsOption>(() => {
+  // 不旋转 X 轴标签；不新增 grid（避免下方留白过多）
+  const xAxisNameGap = 22
+  const axisLabelMargin = 8
+
   const option: any = {
     title: props.title ? {
       text: props.title,
@@ -59,14 +63,19 @@ const chartOption = computed<EChartsOption>(() => {
     } : undefined,
     xAxis: props.horizontal ? {
       type: 'value',
-      name: props.xAxisName
+      name: props.xAxisName,
+      nameLocation: 'middle',
+      nameGap: xAxisNameGap
     } : {
       type: 'category',
+      nameLocation: 'middle',
+      nameGap: xAxisNameGap,
       data: props.categories,
       name: props.xAxisName,
       axisLabel: {
         interval: 0,
-        rotate: props.categories.length > 6 ? 45 : 0
+        rotate: 0,
+        margin: axisLabelMargin
       }
     },
     yAxis: props.horizontal ? {
