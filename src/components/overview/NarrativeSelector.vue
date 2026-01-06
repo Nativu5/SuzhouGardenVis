@@ -4,68 +4,62 @@
  * 用于切换概览模式的四个叙事场景
  */
 
-import { computed } from 'vue'
-import { useGardenStore } from '@/stores/gardenStore'
-import type { NarrativeScene } from '@/types'
+import { computed } from 'vue';
+import { useGardenStore } from '@/stores/gardenStore';
+import type { NarrativeScene } from '@/types';
 
 // 叙事场景配置
 const narrativeOptions = [
   {
     value: 'spatial_heritage' as NarrativeScene,
     label: '空间集中与遗产核心',
-    description: '呈现园林在苏州各区县的集中程度与高等级保护的空间分布'
+    description: '呈现园林在苏州各区县的集中程度与高等级保护的空间分布',
   },
   {
     value: 'historical_rhythm' as NarrativeScene,
     label: '历史谱系与认定节奏',
-    description: '展示建设时期结构与认定批次的关系，观察不同年代的保护级别分布'
+    description: '展示建设时期结构与认定批次的关系，观察不同年代的保护级别分布',
   },
   {
     value: 'accessibility_ownership' as NarrativeScene,
     label: '开放可达与权属/用途',
-    description: '解释开放性差异的结构性因素，识别权属与用途对可达性的影响'
+    description: '解释开放性差异的结构性因素，识别权属与用途对可达性的影响',
   },
   {
     value: 'scale_resources' as NarrativeScene,
     label: '规模结构与资源配置',
-    description: '展示园林规模分布与开放性的关联，识别大型园林所在区域与时代'
+    description: '展示园林规模分布与开放性的关联，识别大型园林所在区域与时代',
   },
   {
     value: 'protection_risk' as NarrativeScene,
     label: '保护状况与风险提示',
-    description: '识别保护风险与治理薄弱点，形成"保护-开放"的治理线索'
-  }
-]
+    description: '识别保护风险与治理薄弱点，形成"保护-开放"的治理线索',
+  },
+];
 
-const store = useGardenStore()
+const store = useGardenStore();
 
 const selectedNarrative = computed({
   get: () => store.overviewNarrative,
   set: (value: NarrativeScene) => {
-    store.setOverviewNarrative(value)
-  }
-})
+    store.setOverviewNarrative(value);
+  },
+});
 
 const currentNarrativeInfo = computed(() => {
-  return narrativeOptions.find(opt => opt.value === selectedNarrative.value)
-})
+  return narrativeOptions.find((opt) => opt.value === selectedNarrative.value);
+});
 </script>
 
 <template>
   <div class="narrative-selector">
     <div class="mb-2">
-      <label class="block text-sm font-medium text-gray-700 mb-2">
-        叙事场景
-      </label>
+      <label class="mb-2 block text-sm font-medium text-gray-700"> 叙事场景 </label>
       <select
         v-model="selectedNarrative"
-        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
+        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
       >
-        <option
-          v-for="option in narrativeOptions"
-          :key="option.value"
-          :value="option.value"
-        >
+        <option v-for="option in narrativeOptions" :key="option.value" :value="option.value">
           {{ option.label }}
         </option>
       </select>
@@ -73,9 +67,9 @@ const currentNarrativeInfo = computed(() => {
 
     <div
       v-if="currentNarrativeInfo"
-      class="text-xs text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-200"
+      class="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600"
     >
-      <div class="font-medium mb-1">场景说明：</div>
+      <div class="mb-1 font-medium">场景说明：</div>
       <div>{{ currentNarrativeInfo.description }}</div>
     </div>
   </div>
@@ -87,6 +81,6 @@ select {
 }
 
 select:hover {
-  border-color: #9CA3AF;
+  border-color: #9ca3af;
 }
 </style>

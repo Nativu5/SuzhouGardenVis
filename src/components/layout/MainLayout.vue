@@ -4,26 +4,26 @@
   - 响应式三栏布局
 -->
 <script setup lang="ts">
-import { useGardenStore } from '@/stores/gardenStore'
-import { computed } from 'vue'
-import HeaderNav from './HeaderNav.vue'
-import LeftPanel from './LeftPanel.vue'
-import MainView from './MainView.vue'
-import RightPanel from './RightPanel.vue'
+import { useGardenStore } from '@/stores/gardenStore';
+import { computed } from 'vue';
+import HeaderNav from './HeaderNav.vue';
+import LeftPanel from './LeftPanel.vue';
+import MainView from './MainView.vue';
+import RightPanel from './RightPanel.vue';
 
-const gardenStore = useGardenStore()
+const gardenStore = useGardenStore();
 
 // 判断是否为探索模式
-const isExploreMode = computed(() => gardenStore.viewMode === 'explore')
+const isExploreMode = computed(() => gardenStore.viewMode === 'explore');
 </script>
 
 <template>
-  <div class="h-screen flex flex-col overflow-hidden">
+  <div class="flex h-screen flex-col overflow-hidden">
     <!-- 顶部导航栏 -->
     <HeaderNav />
 
     <!-- 主内容区 -->
-    <div class="flex-1 flex overflow-hidden">
+    <div class="flex flex-1 overflow-hidden">
       <!-- 左侧操作区 -->
       <LeftPanel />
 

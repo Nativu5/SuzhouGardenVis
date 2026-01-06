@@ -92,7 +92,7 @@ src/
 - [项目需求文档](docs/项目需求.md)
 - [实现方案文档](docs/实现方案.md)
 - [开发指引与进度](AGENTS.md)
-- [部署指南](DEPLOYMENT.md)
+- [部署指南](docs/DEPLOYMENT.md)
 
 ## 许可
 

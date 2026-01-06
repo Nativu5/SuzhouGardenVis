@@ -3,10 +3,17 @@
  * 只导入项目实际使用的图表类型和组件，减小打包体积
  */
 
-import * as echarts from 'echarts/core'
+import * as echarts from 'echarts/core';
 
 // 导入图表类型
-import { BarChart, SankeyChart, RadarChart, ScatterChart, HeatmapChart, LineChart } from 'echarts/charts'
+import {
+  BarChart,
+  SankeyChart,
+  RadarChart,
+  ScatterChart,
+  HeatmapChart,
+  LineChart,
+} from 'echarts/charts';
 
 // 导入组件
 import {
@@ -15,11 +22,11 @@ import {
   GridComponent,
   LegendComponent,
   DataZoomComponent,
-  VisualMapComponent
-} from 'echarts/components'
+  VisualMapComponent,
+} from 'echarts/components';
 
 // 导入渲染器
-import { CanvasRenderer } from 'echarts/renderers'
+import { CanvasRenderer } from 'echarts/renderers';
 
 // 注册必需的组件
 echarts.use([
@@ -40,11 +47,11 @@ echarts.use([
   VisualMapComponent,
 
   // 渲染器
-  CanvasRenderer
-])
+  CanvasRenderer,
+]);
 
 // 导出配置好的 echarts 实例
-export default echarts
+export default echarts;
 
 // 导出类型（从原始 echarts 导出）
-export type { EChartsOption, ECharts } from 'echarts'
+export type { EChartsOption, ECharts } from 'echarts';

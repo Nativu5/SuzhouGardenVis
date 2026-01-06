@@ -6,139 +6,141 @@
   - 支持图片懒加载和错误处理
 -->
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch } from 'vue';
 
 interface Props {
-  gardenName: string
+  gardenName: string;
 }
 
-const props = defineProps<Props>()
+const props = defineProps<Props>();
 
 // 图片状态
-const availableImages = ref<string[]>([])
-const currentImageIndex = ref(0)
-const isLoadingImages = ref(true)
-const imageLoadError = ref<Set<string>>(new Set())
+const availableImages = ref<string[]>([]);
+const currentImageIndex = ref(0);
+const isLoadingImages = ref(true);
+const imageLoadError = ref<Set<string>>(new Set());
 
 // 最多尝试加载的图片数量
-const MAX_IMAGES = 10
+const MAX_IMAGES = 10;
 
 // 当前显示的图片路径
 const currentImageUrl = computed(() => {
-  if (availableImages.value.length === 0) return null
-  return availableImages.value[currentImageIndex.value]
-})
+  if (availableImages.value.length === 0) return null;
+  return availableImages.value[currentImageIndex.value];
+});
 
 // 是否有多张图片
-const hasMultipleImages = computed(() => availableImages.value.length > 1)
+const hasMultipleImages = computed(() => availableImages.value.length > 1);
 
 // 是否没有任何可用图片
-const hasNoImages = computed(() =>
-  !isLoadingImages.value && availableImages.value.length === 0
-)
+const hasNoImages = computed(() => !isLoadingImages.value && availableImages.value.length === 0);
 
 /**
  * 加载园林图片
  * 优化策略：优先加载第一张，成功后再异步加载后续图片
  */
 const loadGardenImages = async () => {
-  isLoadingImages.value = true
-  availableImages.value = []
-  imageLoadError.value = new Set()
-  currentImageIndex.value = 0
+  isLoadingImages.value = true;
+  availableImages.value = [];
+  imageLoadError.value = new Set();
+  currentImageIndex.value = 0;
 
   // 1. 优先检查第一张图片
-  const firstImagePath = `/dataset/images/${props.gardenName}/01.jpg`
-  const firstImageExists = await checkImageExists(firstImagePath)
+  const firstImagePath = `/dataset/images/${props.gardenName}/01.jpg`;
+  const firstImageExists = await checkImageExists(firstImagePath);
 
   if (firstImageExists) {
-    availableImages.value.push(firstImagePath)
-    isLoadingImages.value = false // 第一张存在，立即结束 loading，让用户看到图片
+    availableImages.value.push(firstImagePath);
+    isLoadingImages.value = false; // 第一张存在，立即结束 loading，让用户看到图片
 
     // 2. 异步检查后续图片 (02-10)
     // 使用 requestIdleCallback 或 setTimeout 避免阻塞主线程
     setTimeout(async () => {
-      const subsequentPromises: Promise<string | null>[] = []
+      const subsequentPromises: Promise<string | null>[] = [];
       for (let i = 2; i <= MAX_IMAGES; i++) {
-        const imageNum = i.toString().padStart(2, '0')
-        const imagePath = `/dataset/images/${props.gardenName}/${imageNum}.jpg`
+        const imageNum = i.toString().padStart(2, '0');
+        const imagePath = `/dataset/images/${props.gardenName}/${imageNum}.jpg`;
         subsequentPromises.push(
-          checkImageExists(imagePath).then(exists => exists ? imagePath : null)
-        )
+          checkImageExists(imagePath).then((exists) => (exists ? imagePath : null)),
+        );
       }
 
-      const results = await Promise.all(subsequentPromises)
-      const validImages = results.filter((path): path is string => path !== null)
-      
+      const results = await Promise.all(subsequentPromises);
+      const validImages = results.filter((path): path is string => path !== null);
+
       // 将后续图片追加到列表中
       if (validImages.length > 0) {
-        availableImages.value = [...availableImages.value, ...validImages]
+        availableImages.value = [...availableImages.value, ...validImages];
       }
-    }, 100)
+    }, 100);
   } else {
     // 第一张不存在，认为无图
-    isLoadingImages.value = false
-    console.log(`📷 园林 ${props.gardenName}: 未找到图片 (01.jpg 不存在)`)
+    isLoadingImages.value = false;
+    console.log(`📷 园林 ${props.gardenName}: 未找到图片 (01.jpg 不存在)`);
   }
-}
+};
 
 /**
  * 检查图片是否存在
  */
 const checkImageExists = (url: string): Promise<boolean> => {
   return new Promise((resolve) => {
-    const img = new Image()
-    img.onload = () => resolve(true)
-    img.onerror = () => resolve(false)
-    img.src = url
-  })
-}
+    const img = new Image();
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = url;
+  });
+};
 
 /**
  * 切换到上一张图片
  */
 const prevImage = () => {
-  if (availableImages.value.length === 0) return
+  if (availableImages.value.length === 0) return;
   currentImageIndex.value =
-    (currentImageIndex.value - 1 + availableImages.value.length) % availableImages.value.length
-}
+    (currentImageIndex.value - 1 + availableImages.value.length) % availableImages.value.length;
+};
 
 /**
  * 切换到下一张图片
  */
 const nextImage = () => {
-  if (availableImages.value.length === 0) return
-  currentImageIndex.value = (currentImageIndex.value + 1) % availableImages.value.length
-}
+  if (availableImages.value.length === 0) return;
+  currentImageIndex.value = (currentImageIndex.value + 1) % availableImages.value.length;
+};
 
 /**
  * 跳转到指定图片
  */
 const goToImage = (index: number) => {
-  currentImageIndex.value = index
-}
+  currentImageIndex.value = index;
+};
 
 /**
  * 处理图片加载错误
  */
 const handleImageError = (url: string) => {
-  imageLoadError.value.add(url)
-  console.warn(`⚠️ 图片加载失败: ${url}`)
-}
+  imageLoadError.value.add(url);
+  console.warn(`⚠️ 图片加载失败: ${url}`);
+};
 
 // 监听园林名称变化，重新加载图片
-watch(() => props.gardenName, () => {
-  loadGardenImages()
-}, { immediate: true })
+watch(
+  () => props.gardenName,
+  () => {
+    loadGardenImages();
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
-  <div class="relative w-full bg-gray-100 rounded-lg overflow-hidden aspect-video">
+  <div class="relative aspect-video w-full overflow-hidden rounded-lg bg-gray-100">
     <!-- 加载中 -->
     <div v-if="isLoadingImages" class="absolute inset-0 flex items-center justify-center">
       <div class="text-center">
         <div
-          class="inline-block w-8 h-8 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"
+          class="inline-block h-8 w-8 animate-spin rounded-full border-2 border-gray-400 border-t-transparent"
         />
         <p class="mt-2 text-xs text-gray-500">加载图片中...</p>
       </div>
@@ -149,7 +151,7 @@ watch(() => props.gardenName, () => {
       v-else-if="hasNoImages"
       class="absolute inset-0 flex flex-col items-center justify-center text-gray-400"
     >
-      <svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="mb-2 h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -161,13 +163,13 @@ watch(() => props.gardenName, () => {
     </div>
 
     <!-- 图片展示 -->
-    <div v-else class="relative w-full h-full">
+    <div v-else class="relative h-full w-full">
       <!-- 当前图片 -->
       <img
         v-if="currentImageUrl"
         :src="currentImageUrl"
         :alt="gardenName"
-        class="w-full h-full object-cover"
+        class="h-full w-full object-cover"
         @error="() => handleImageError(currentImageUrl!)"
       />
 
@@ -175,41 +177,49 @@ watch(() => props.gardenName, () => {
       <template v-if="hasMultipleImages">
         <!-- 左箭头 -->
         <button
-          class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-colors z-10"
+          class="absolute left-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
           @click="prevImage"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </button>
 
         <!-- 右箭头 -->
         <button
-          class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-colors z-10"
+          class="absolute right-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
           @click="nextImage"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            />
           </svg>
         </button>
 
         <!-- 图片指示器 -->
-        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
+        <div class="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5">
           <button
             v-for="(_, index) in availableImages"
             :key="index"
-            class="w-2 h-2 rounded-full transition-all"
+            class="h-2 w-2 rounded-full transition-all"
             :class="[
-              index === currentImageIndex
-                ? 'bg-white w-4'
-                : 'bg-white/50 hover:bg-white/75'
+              index === currentImageIndex ? 'w-4 bg-white' : 'bg-white/50 hover:bg-white/75',
             ]"
             @click="goToImage(index)"
           />
         </div>
 
         <!-- 图片计数 -->
-        <div class="absolute top-2 right-2 px-2 py-1 bg-black/50 text-white text-xs rounded z-10">
+        <div class="absolute right-2 top-2 z-10 rounded bg-black/50 px-2 py-1 text-xs text-white">
           {{ currentImageIndex + 1 }} / {{ availableImages.length }}
         </div>
       </template>

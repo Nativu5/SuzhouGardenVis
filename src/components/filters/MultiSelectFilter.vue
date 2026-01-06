@@ -3,130 +3,142 @@
   支持下拉多选，带有选中数量提示
 -->
 <script setup lang="ts">
-import { computed, ref, type Directive } from 'vue'
+import { computed, ref, type Directive } from 'vue';
 
 interface Props {
-  label: string // 筛选器标签
-  options: string[] // 可选项列表
-  modelValue: string[] // 选中的值（v-model）
-  placeholder?: string // 占位符
+  label: string; // 筛选器标签
+  options: string[]; // 可选项列表
+  modelValue: string[]; // 选中的值（v-model）
+  placeholder?: string; // 占位符
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  placeholder: '请选择'
-})
+  placeholder: '请选择',
+});
 
 const emit = defineEmits<{
-  'update:modelValue': [value: string[]]
-}>()
+  'update:modelValue': [value: string[]];
+}>();
 
 // 自定义指令：点击外部关闭（在 script setup 中以 vXxx 命名，模板中自动识别为 v-xxx）
 const vClickAway: Directive<HTMLElement & { clickAwayEvent?: (e: Event) => void }, () => void> = {
   mounted(el, binding) {
     el.clickAwayEvent = function (event: Event) {
       if (!(el === event.target || el.contains(event.target as Node))) {
-        binding.value()
+        binding.value();
       }
-    }
-    document.addEventListener('click', el.clickAwayEvent)
+    };
+    document.addEventListener('click', el.clickAwayEvent);
   },
   unmounted(el) {
     if (el.clickAwayEvent) {
-      document.removeEventListener('click', el.clickAwayEvent)
+      document.removeEventListener('click', el.clickAwayEvent);
     }
-  }
-}
+  },
+};
 
 // 是否展开下拉框
-const isExpanded = ref(false)
+const isExpanded = ref(false);
 
 // 选中的项数量
-const selectedCount = computed(() => props.modelValue.length)
+const selectedCount = computed(() => props.modelValue.length);
 
 // 显示文本
 const displayText = computed(() => {
   if (selectedCount.value === 0) {
-    return props.placeholder
+    return props.placeholder;
   }
-  return `已选 ${selectedCount.value} 项`
-})
+  return `已选 ${selectedCount.value} 项`;
+});
 
 // 切换选项
 function toggleOption(option: string) {
-  const currentValues = [...props.modelValue]
-  const index = currentValues.indexOf(option)
+  const currentValues = [...props.modelValue];
+  const index = currentValues.indexOf(option);
 
   if (index > -1) {
-    currentValues.splice(index, 1)
+    currentValues.splice(index, 1);
   } else {
-    currentValues.push(option)
+    currentValues.push(option);
   }
 
-  emit('update:modelValue', currentValues)
+  emit('update:modelValue', currentValues);
 }
 
 // 全选
 function selectAll() {
-  emit('update:modelValue', [...props.options])
+  emit('update:modelValue', [...props.options]);
 }
 
 // 清空
 function clearAll() {
-  emit('update:modelValue', [])
+  emit('update:modelValue', []);
 }
 
 // 点击外部关闭下拉框
 function handleClickOutside() {
-  isExpanded.value = false
+  isExpanded.value = false;
 }
 </script>
 
 <template>
   <div class="multi-select-filter">
-    <label class="block text-sm font-medium text-gray-700 mb-2">
+    <label class="mb-2 block text-sm font-medium text-gray-700">
       {{ label }}
     </label>
 
-    <div class="relative" v-click-away="handleClickOutside">
+    <div v-click-away="handleClickOutside" class="relative">
       <!-- 触发按钮 -->
       <button
         type="button"
-        @click="isExpanded = !isExpanded"
-        class="w-full flex items-center justify-between px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-left hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+        class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-left text-sm transition-colors hover:border-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
         :class="{ 'border-blue-500 ring-2 ring-blue-500': isExpanded }"
+        @click="isExpanded = !isExpanded"
       >
-        <span :class="{ 'text-gray-500': selectedCount === 0, 'text-gray-900 font-medium': selectedCount > 0 }">
+        <span
+          :class="{
+            'text-gray-500': selectedCount === 0,
+            'font-medium text-gray-900': selectedCount > 0,
+          }"
+        >
           {{ displayText }}
         </span>
         <svg
-          class="w-4 h-4 text-gray-400 transition-transform"
-          :class="{ 'transform rotate-180': isExpanded }"
+          class="h-4 w-4 text-gray-400 transition-transform"
+          :class="{ 'rotate-180 transform': isExpanded }"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
 
       <!-- 下拉选项 -->
       <div
         v-show="isExpanded"
-        class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
+        class="absolute z-10 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
       >
         <!-- 操作按钮 -->
-        <div class="sticky top-0 bg-gray-50 border-b border-gray-200 px-3 py-2 flex items-center justify-between">
+        <div
+          class="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-gray-50 px-3 py-2"
+        >
           <button
             type="button"
+            class="text-xs font-medium text-blue-600 hover:text-blue-800"
             @click="selectAll"
-            class="text-xs text-blue-600 hover:text-blue-800 font-medium"
           >
             全选
           </button>
           <button
             type="button"
+            class="text-xs font-medium text-gray-600 hover:text-gray-800"
             @click="clearAll"
-            class="text-xs text-gray-600 hover:text-gray-800 font-medium"
           >
             清空
           </button>
@@ -137,13 +149,13 @@ function handleClickOutside() {
           <label
             v-for="option in options"
             :key="option"
-            class="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer transition-colors"
+            class="flex cursor-pointer items-center px-3 py-2 transition-colors hover:bg-gray-50"
           >
             <input
               type="checkbox"
               :checked="modelValue.includes(option)"
+              class="h-4 w-4 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               @change="toggleOption(option)"
-              class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
             />
             <span class="ml-2 text-sm text-gray-700">{{ option }}</span>
           </label>
@@ -152,5 +164,3 @@ function handleClickOutside() {
     </div>
   </div>
 </template>
-
-

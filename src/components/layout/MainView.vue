@@ -4,26 +4,26 @@
   - 探索模式：地图容器
 -->
 <script setup lang="ts">
-import { useGardenStore } from '@/stores/gardenStore'
-import { computed } from 'vue'
-import NarrativeScene1 from '@/components/overview/NarrativeScene1.vue'
-import NarrativeScene2 from '@/components/overview/NarrativeScene2.vue'
-import NarrativeScene3 from '@/components/overview/NarrativeScene3.vue'
-import NarrativeScene4 from '@/components/overview/NarrativeScene4.vue'
-import NarrativeScene5 from '@/components/overview/NarrativeScene5.vue'
-import MapView from '@/components/map/MapView.vue'
+import { useGardenStore } from '@/stores/gardenStore';
+import { computed } from 'vue';
+import NarrativeScene1 from '@/components/overview/NarrativeScene1.vue';
+import NarrativeScene2 from '@/components/overview/NarrativeScene2.vue';
+import NarrativeScene3 from '@/components/overview/NarrativeScene3.vue';
+import NarrativeScene4 from '@/components/overview/NarrativeScene4.vue';
+import NarrativeScene5 from '@/components/overview/NarrativeScene5.vue';
+import MapView from '@/components/map/MapView.vue';
 
-const gardenStore = useGardenStore()
+const gardenStore = useGardenStore();
 
 // 判断是否为概览模式
-const isOverviewMode = computed(() => gardenStore.viewMode === 'overview')
+const isOverviewMode = computed(() => gardenStore.viewMode === 'overview');
 
 // 当前叙事场景
-const currentNarrative = computed(() => gardenStore.overviewNarrative)
+const currentNarrative = computed(() => gardenStore.overviewNarrative);
 </script>
 
 <template>
-  <main class="flex-1 bg-gray-50 overflow-auto">
+  <main class="flex-1 overflow-auto bg-gray-50">
     <!-- 概览模式：叙事场景 -->
     <div v-if="isOverviewMode" class="h-full">
       <!-- 根据当前叙事场景显示对应组件 -->

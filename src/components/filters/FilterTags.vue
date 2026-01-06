@@ -3,23 +3,23 @@
   显示当前生效的筛选条件，支持快速清除单个或全部筛选
 -->
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useGardenStore } from '@/stores/gardenStore'
+import { computed } from 'vue';
+import { useGardenStore } from '@/stores/gardenStore';
 
-const gardenStore = useGardenStore()
+const gardenStore = useGardenStore();
 
 // 筛选标签接口
 interface FilterTag {
-  key: string
-  label: string
-  value: string
-  onRemove: () => void
+  key: string;
+  label: string;
+  value: string;
+  onRemove: () => void;
 }
 
 // 生成筛选标签列表
 const filterTags = computed<FilterTag[]>(() => {
-  const tags: FilterTag[] = []
-  const filters = gardenStore.filters
+  const tags: FilterTag[] = [];
+  const filters = gardenStore.filters;
 
   // 搜索关键词
   if (filters.searchKeyword) {
@@ -27,8 +27,8 @@ const filterTags = computed<FilterTag[]>(() => {
       key: 'search',
       label: '搜索',
       value: filters.searchKeyword,
-      onRemove: () => gardenStore.updateFilters({ searchKeyword: undefined })
-    })
+      onRemove: () => gardenStore.updateFilters({ searchKeyword: undefined }),
+    });
   }
 
   // 区县
@@ -39,11 +39,13 @@ const filterTags = computed<FilterTag[]>(() => {
         label: '区县',
         value: district,
         onRemove: () => {
-          const newDistricts = filters.districts!.filter(d => d !== district)
-          gardenStore.updateFilters({ districts: newDistricts.length > 0 ? newDistricts : undefined })
-        }
-      })
-    })
+          const newDistricts = filters.districts!.filter((d) => d !== district);
+          gardenStore.updateFilters({
+            districts: newDistricts.length > 0 ? newDistricts : undefined,
+          });
+        },
+      });
+    });
   }
 
   // 开放情况
@@ -54,11 +56,11 @@ const filterTags = computed<FilterTag[]>(() => {
         label: '开放情况',
         value: status,
         onRemove: () => {
-          const newStatus = filters.openStatus!.filter(s => s !== status)
-          gardenStore.updateFilters({ openStatus: newStatus.length > 0 ? newStatus : undefined })
-        }
-      })
-    })
+          const newStatus = filters.openStatus!.filter((s) => s !== status);
+          gardenStore.updateFilters({ openStatus: newStatus.length > 0 ? newStatus : undefined });
+        },
+      });
+    });
   }
 
   // 文保单位级别
@@ -69,11 +71,13 @@ const filterTags = computed<FilterTag[]>(() => {
         label: '文保级别',
         value: level,
         onRemove: () => {
-          const newLevels = filters.heritageLevels!.filter(l => l !== level)
-          gardenStore.updateFilters({ heritageLevels: newLevels.length > 0 ? newLevels : undefined })
-        }
-      })
-    })
+          const newLevels = filters.heritageLevels!.filter((l) => l !== level);
+          gardenStore.updateFilters({
+            heritageLevels: newLevels.length > 0 ? newLevels : undefined,
+          });
+        },
+      });
+    });
   }
 
   // 权属性质
@@ -84,11 +88,11 @@ const filterTags = computed<FilterTag[]>(() => {
         label: '权属性质',
         value: type,
         onRemove: () => {
-          const newTypes = filters.ownershipTypes!.filter(t => t !== type)
-          gardenStore.updateFilters({ ownershipTypes: newTypes.length > 0 ? newTypes : undefined })
-        }
-      })
-    })
+          const newTypes = filters.ownershipTypes!.filter((t) => t !== type);
+          gardenStore.updateFilters({ ownershipTypes: newTypes.length > 0 ? newTypes : undefined });
+        },
+      });
+    });
   }
 
   // 当前用途
@@ -99,11 +103,11 @@ const filterTags = computed<FilterTag[]>(() => {
         label: '当前用途',
         value: use,
         onRemove: () => {
-          const newUses = filters.currentUses!.filter(u => u !== use)
-          gardenStore.updateFilters({ currentUses: newUses.length > 0 ? newUses : undefined })
-        }
-      })
-    })
+          const newUses = filters.currentUses!.filter((u) => u !== use);
+          gardenStore.updateFilters({ currentUses: newUses.length > 0 ? newUses : undefined });
+        },
+      });
+    });
   }
 
   // 世界遗产
@@ -112,8 +116,8 @@ const filterTags = computed<FilterTag[]>(() => {
       key: 'worldHeritage',
       label: '世界遗产',
       value: filters.isWorldHeritage ? '是' : '否',
-      onRemove: () => gardenStore.updateFilters({ isWorldHeritage: null })
-    })
+      onRemove: () => gardenStore.updateFilters({ isWorldHeritage: null }),
+    });
   }
 
   // 年代分类
@@ -124,11 +128,13 @@ const filterTags = computed<FilterTag[]>(() => {
         label: '年代分类',
         value: category,
         onRemove: () => {
-          const newCategories = filters.eraCategories!.filter(c => c !== category)
-          gardenStore.updateFilters({ eraCategories: newCategories.length > 0 ? newCategories : undefined })
-        }
-      })
-    })
+          const newCategories = filters.eraCategories!.filter((c) => c !== category);
+          gardenStore.updateFilters({
+            eraCategories: newCategories.length > 0 ? newCategories : undefined,
+          });
+        },
+      });
+    });
   }
 
   // 建造年代
@@ -139,11 +145,13 @@ const filterTags = computed<FilterTag[]>(() => {
         label: '建造年代',
         value: period,
         onRemove: () => {
-          const newPeriods = filters.constructionPeriods!.filter(p => p !== period)
-          gardenStore.updateFilters({ constructionPeriods: newPeriods.length > 0 ? newPeriods : undefined })
-        }
-      })
-    })
+          const newPeriods = filters.constructionPeriods!.filter((p) => p !== period);
+          gardenStore.updateFilters({
+            constructionPeriods: newPeriods.length > 0 ? newPeriods : undefined,
+          });
+        },
+      });
+    });
   }
 
   // 公布批次
@@ -154,11 +162,13 @@ const filterTags = computed<FilterTag[]>(() => {
         label: '公布批次',
         value: batch,
         onRemove: () => {
-          const newBatches = filters.publicationBatches!.filter(b => b !== batch)
-          gardenStore.updateFilters({ publicationBatches: newBatches.length > 0 ? newBatches : undefined })
-        }
-      })
-    })
+          const newBatches = filters.publicationBatches!.filter((b) => b !== batch);
+          gardenStore.updateFilters({
+            publicationBatches: newBatches.length > 0 ? newBatches : undefined,
+          });
+        },
+      });
+    });
   }
 
   // 面积区间
@@ -169,11 +179,11 @@ const filterTags = computed<FilterTag[]>(() => {
         label: '面积区间',
         value: `${range}㎡`,
         onRemove: () => {
-          const newRanges = filters.areaRanges!.filter(r => r !== range)
-          gardenStore.updateFilters({ areaRanges: newRanges.length > 0 ? newRanges : undefined })
-        }
-      })
-    })
+          const newRanges = filters.areaRanges!.filter((r) => r !== range);
+          gardenStore.updateFilters({ areaRanges: newRanges.length > 0 ? newRanges : undefined });
+        },
+      });
+    });
   }
 
   // 面积范围（最小值/最大值）
@@ -182,8 +192,8 @@ const filterTags = computed<FilterTag[]>(() => {
       key: 'areaMin',
       label: '最小面积',
       value: `≥${filters.areaMin}㎡`,
-      onRemove: () => gardenStore.updateFilters({ areaMin: undefined })
-    })
+      onRemove: () => gardenStore.updateFilters({ areaMin: undefined }),
+    });
   }
 
   if (filters.areaMax !== undefined && filters.areaMax !== null) {
@@ -191,31 +201,31 @@ const filterTags = computed<FilterTag[]>(() => {
       key: 'areaMax',
       label: '最大面积',
       value: `≤${filters.areaMax}㎡`,
-      onRemove: () => gardenStore.updateFilters({ areaMax: undefined })
-    })
+      onRemove: () => gardenStore.updateFilters({ areaMax: undefined }),
+    });
   }
 
-  return tags
-})
+  return tags;
+});
 
 // 是否有筛选条件
-const hasFilters = computed(() => filterTags.value.length > 0)
+const hasFilters = computed(() => filterTags.value.length > 0);
 
 // 清空所有筛选
 function clearAllFilters() {
-  gardenStore.clearFilters()
+  gardenStore.clearFilters();
 }
 </script>
 
 <template>
   <div v-if="hasFilters" class="filter-tags">
     <!-- 标题与清空按钮 -->
-    <div class="flex items-center justify-between mb-2">
+    <div class="mb-2 flex items-center justify-between">
       <span class="text-xs font-medium text-gray-600">当前筛选条件</span>
       <button
         type="button"
+        class="text-xs font-medium text-blue-600 hover:text-blue-800"
         @click="clearAllFilters"
-        class="text-xs text-blue-600 hover:text-blue-800 font-medium"
       >
         清空全部
       </button>
@@ -226,18 +236,23 @@ function clearAllFilters() {
       <div
         v-for="tag in filterTags"
         :key="tag.key"
-        class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs"
+        class="inline-flex items-center gap-1 rounded bg-blue-100 px-2 py-1 text-xs text-blue-800"
       >
         <span class="font-medium">{{ tag.label }}:</span>
         <span>{{ tag.value }}</span>
         <button
           type="button"
-          @click="tag.onRemove"
           class="ml-1 text-blue-600 hover:text-blue-900"
           aria-label="移除筛选条件"
+          @click="tag.onRemove"
         >
-          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>

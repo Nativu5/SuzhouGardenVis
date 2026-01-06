@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+.output
+.vscode
+archived/**
+public/dataset/**
+dataset/images/**
+dataset/html/**
+__pycache__
+.venv

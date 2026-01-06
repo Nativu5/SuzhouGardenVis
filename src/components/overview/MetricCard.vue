@@ -5,21 +5,23 @@
  */
 
 interface Props {
-  title: string
-  value: string | number
-  unit?: string
-  description?: string
-  icon?: string
+  title: string;
+  value: string | number;
+  unit?: string;
+  description?: string;
+  icon?: string;
 }
 
-const props = defineProps<Props>()
+const props = defineProps<Props>();
 </script>
 
 <template>
-  <div class="metric-card bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+  <div
+    class="metric-card rounded-lg border border-gray-200 bg-white p-4 transition-shadow hover:shadow-md"
+  >
     <div class="flex items-start justify-between">
       <div class="flex-1">
-        <div class="text-sm text-gray-600 mb-1">{{ props.title }}</div>
+        <div class="mb-1 text-sm text-gray-600">{{ props.title }}</div>
         <div class="flex items-baseline gap-1">
           <div class="text-2xl font-semibold text-gray-900">
             {{ props.value }}
@@ -28,7 +30,7 @@ const props = defineProps<Props>()
             {{ props.unit }}
           </div>
         </div>
-        <div v-if="props.description" class="text-xs text-gray-500 mt-2">
+        <div v-if="props.description" class="mt-2 text-xs text-gray-500">
           {{ props.description }}
         </div>
       </div>

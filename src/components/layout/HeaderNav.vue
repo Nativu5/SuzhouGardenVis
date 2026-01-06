@@ -4,28 +4,24 @@
   - 模式切换按钮（概览/探索）
 -->
 <script setup lang="ts">
-import { useGardenStore } from '@/stores/gardenStore'
-import type { ViewMode } from '@/types'
+import { useGardenStore } from '@/stores/gardenStore';
+import type { ViewMode } from '@/types';
 
-const gardenStore = useGardenStore()
+const gardenStore = useGardenStore();
 
 const toggleViewMode = () => {
-  const newMode: ViewMode = gardenStore.viewMode === 'overview' ? 'explore' : 'overview'
-  gardenStore.setViewMode(newMode)
-}
+  const newMode: ViewMode = gardenStore.viewMode === 'overview' ? 'explore' : 'overview';
+  gardenStore.setViewMode(newMode);
+};
 </script>
 
 <template>
-  <header class="bg-white border-b border-gray-200 shadow-sm">
-    <div class="h-16 px-6 flex items-center justify-between">
+  <header class="border-b border-gray-200 bg-white shadow-sm">
+    <div class="flex h-16 items-center justify-between px-6">
       <!-- 左侧：项目标题 -->
       <div class="flex items-center space-x-4">
-        <h1 class="text-xl font-bold text-gray-900">
-          苏州园林数据可视化
-        </h1>
-        <div class="text-sm text-gray-500">
-          Suzhou Gardens Visualization
-        </div>
+        <h1 class="text-xl font-bold text-gray-900">苏州园林数据可视化</h1>
+        <div class="text-sm text-gray-500">Suzhou Gardens Visualization</div>
       </div>
 
       <!-- 右侧：模式切换按钮 -->
@@ -39,12 +35,12 @@ const toggleViewMode = () => {
 
         <!-- 切换按钮 -->
         <button
+          class="flex items-center space-x-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-blue-700"
           @click="toggleViewMode"
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2"
         >
           <svg
             v-if="gardenStore.viewMode === 'overview'"
-            class="w-4 h-4"
+            class="h-4 w-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -56,13 +52,7 @@ const toggleViewMode = () => {
               d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
             />
           </svg>
-          <svg
-            v-else
-            class="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg v-else class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
