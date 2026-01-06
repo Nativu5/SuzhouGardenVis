@@ -34,6 +34,11 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  title: undefined,
+  xAxisName: undefined,
+  yAxisName: undefined,
+  yCategories: undefined,
+  tooltipFormatter: undefined,
   height: '400px',
   loading: false,
   xAxisType: 'value',
@@ -107,9 +112,9 @@ const chartOption = computed<EChartsOption>(() => {
   const option: EChartsOption = {
     title: props.title
       ? {
-          text: props.title,
-          left: 'center',
-        }
+        text: props.title,
+        left: 'center',
+      }
       : undefined,
     tooltip: {
       trigger: 'item',
@@ -136,10 +141,10 @@ const chartOption = computed<EChartsOption>(() => {
     legend:
       props.showLegend && groupedData.value.length > 1
         ? {
-            data: groupedData.value.map((g) => g.name),
-            top: props.title ? 40 : 10,
-            left: 'center',
-          }
+          data: groupedData.value.map((g) => g.name),
+          top: props.title ? 40 : 10,
+          left: 'center',
+        }
         : undefined,
     grid: {
       left: '10%',
@@ -171,29 +176,29 @@ const chartOption = computed<EChartsOption>(() => {
     yAxis:
       props.yAxisType === 'category'
         ? {
-            type: 'category',
-            data: props.yCategories || [],
-            name: props.yAxisName,
-            nameLocation: 'middle',
-            nameGap: 60,
-            axisLabel: {
-              interval: 0,
-            },
-          }
+          type: 'category',
+          data: props.yCategories || [],
+          name: props.yAxisName,
+          nameLocation: 'middle',
+          nameGap: 60,
+          axisLabel: {
+            interval: 0,
+          },
+        }
         : {
-            type: props.yAxisType === 'log' ? 'log' : 'value',
-            name: props.yAxisName,
-            nameLocation: 'middle',
-            nameGap: 50,
-            logBase: props.yAxisType === 'log' ? 10 : undefined,
-            splitLine: {
-              show: true,
-              lineStyle: {
-                type: 'dashed',
-                color: '#E5E7EB',
-              },
+          type: props.yAxisType === 'log' ? 'log' : 'value',
+          name: props.yAxisName,
+          nameLocation: 'middle',
+          nameGap: 50,
+          logBase: props.yAxisType === 'log' ? 10 : undefined,
+          splitLine: {
+            show: true,
+            lineStyle: {
+              type: 'dashed',
+              color: '#E5E7EB',
             },
           },
+        },
     series: series as any,
   };
 
@@ -209,10 +214,5 @@ const handleChartClick = (params: any) => {
 </script>
 
 <template>
-  <BaseChart
-    :option="chartOption"
-    :height="props.height"
-    :loading="props.loading"
-    @chart-click="handleChartClick"
-  />
+  <BaseChart :option="chartOption" :height="props.height" :loading="props.loading" @chart-click="handleChartClick" />
 </template>

@@ -15,7 +15,7 @@ import {
   generateDistrictHeritageLevelMatrix,
   calculateHighLevelHeritageRatio,
 } from '@/utils/chartDataProcessor';
-import { getDistrictColor, getHeritageLevelColor, getOpenStatusColor } from '@/config/theme';
+import { getDistrictColor, getHeritageLevelColor } from '@/config/theme';
 
 const store = useGardenStore();
 
@@ -57,11 +57,11 @@ const concentrationRatio = computed(() => {
     })
     .filter((item) => item !== null && item.value > 0)
     .sort((a, b) => a!.name.localeCompare(b!.name, 'zh-CN')) as Array<{
-    name: string;
-    value: number;
-    gardenRatio: number;
-    areaRatio: number;
-  }>;
+      name: string;
+      value: number;
+      gardenRatio: number;
+      areaRatio: number;
+    }>;
 
   return {
     data: result,
@@ -263,8 +263,7 @@ const coreScatterTooltipFormatter = (params: any) => {
     <div class="mb-6">
       <h2 class="mb-2 text-2xl font-bold text-gray-900">空间集中与遗产核心</h2>
       <div class="mb-4 text-sm text-gray-600">
-        <strong>核心观点：</strong
-        >园林与高等级遗产高度集中在古城核心区，集中度远高于面积与人口占比，形成"单极核心"。
+        <strong>核心观点：</strong>园林与高等级遗产高度集中在古城核心区，集中度远高于面积与人口占比，形成"单极核心"。
       </div>
 
       <!-- 阅读路径提示 -->
@@ -286,9 +285,7 @@ const coreScatterTooltipFormatter = (params: any) => {
           集中度比值约 {{ keyInsights.concentrationRatio }}
         </div>
       </div>
-      <div
-        class="bg-linear-to-r rounded-lg border border-yellow-200 from-yellow-50 to-yellow-100 p-4"
-      >
+      <div class="bg-linear-to-r rounded-lg border border-yellow-200 from-yellow-50 to-yellow-100 p-4">
         <div class="mb-1 text-xs font-medium text-yellow-600">遗产核心</div>
         <div class="text-lg font-bold text-yellow-800">
           世界遗产全部分布于{{ keyInsights.worldHeritageLocation }}
@@ -314,29 +311,16 @@ const coreScatterTooltipFormatter = (params: any) => {
     <div class="mb-6 grid grid-cols-2 gap-6">
       <!-- 区县×文保级别矩阵热力图 -->
       <div class="rounded-lg border border-gray-200 bg-white p-4">
-        <HeatmapMatrixChart
-          title="区县×文保级别热力矩阵"
-          :data="districtHeritageLevelMatrix.matrixData"
+        <HeatmapMatrixChart title="区县×文保级别热力矩阵" :data="districtHeritageLevelMatrix.matrixData"
           :x-categories="districtHeritageLevelMatrix.xCategories"
-          :y-categories="districtHeritageLevelMatrix.yCategories"
-          x-axis-name="区县"
-          y-axis-name="文保级别"
-          height="400px"
-        />
+          :y-categories="districtHeritageLevelMatrix.yCategories" x-axis-name="区县" y-axis-name="文保级别" height="400px" />
         <div class="mt-2 text-xs text-gray-500">注：色深 = 数量；鼠标悬停显示区县内占比</div>
       </div>
 
       <!-- 园林占比/面积占比比值条形图 -->
       <div class="rounded-lg border border-gray-200 bg-white p-4">
-        <BarChart
-          title="各区县集中度比值"
-          :data="concentrationRatio.data"
-          :colors="concentrationRatio.colors"
-          x-axis-name="区县"
-          y-axis-name="集中度比值"
-          height="400px"
-          :tooltip-formatter="concentrationRatioTooltipFormatter"
-        />
+        <BarChart title="各区县集中度比值" :data="concentrationRatio.data" :colors="concentrationRatio.colors" x-axis-name="区县"
+          y-axis-name="集中度比值" height="400px" :tooltip-formatter="concentrationRatioTooltipFormatter" />
         <div class="mt-2 text-xs text-gray-500">
           注：集中度比值 = 园林占比 ÷ 面积占比；比值越高，集中度越高
         </div>
@@ -344,28 +328,15 @@ const coreScatterTooltipFormatter = (params: any) => {
 
       <!-- 核心区结构散点图 -->
       <div class="rounded-lg border border-gray-200 bg-white p-4">
-        <ScatterChart
-          title="核心区结构散点图"
-          :data="coreDistrictScatter"
-          x-axis-name="园林密度 (个/km²)"
-          y-axis-name="高等级占比 (%)"
-          height="400px"
-          :show-legend="false"
-          :tooltip-formatter="coreScatterTooltipFormatter"
-        />
+        <ScatterChart title="核心区结构散点图" :data="coreDistrictScatter" x-axis-name="园林密度 (个/km²)" y-axis-name="高等级占比 (%)"
+          height="400px" :show-legend="false" :tooltip-formatter="coreScatterTooltipFormatter" />
         <div class="mt-2 text-xs text-gray-500">注：气泡大小 = 园林数量；高等级 = 全国+省级</div>
       </div>
 
       <!-- 区县×文保等级堆叠柱状图 -->
       <div class="rounded-lg border border-gray-200 bg-white p-4">
-        <StackedBarChart
-          title="区县×文保等级构成"
-          :categories="heritageLevelComposition.categories"
-          :series="heritageLevelComposition.series"
-          x-axis-name="区县"
-          y-axis-name="园林数量"
-          height="400px"
-        />
+        <StackedBarChart title="区县×文保等级构成" :categories="heritageLevelComposition.categories"
+          :series="heritageLevelComposition.series" x-axis-name="区县" y-axis-name="园林数量" height="400px" />
         <div class="mt-2 text-xs text-gray-500">注：展示各区县不同文保级别园林的分布情况</div>
       </div>
     </div>
@@ -377,29 +348,19 @@ const coreScatterTooltipFormatter = (params: any) => {
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-              >
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 名称
               </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-              >
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 区县
               </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-              >
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 文保级别
               </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-              >
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 开放情况
               </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-              >
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 面积 (㎡)
               </th>
             </tr>
@@ -416,13 +377,11 @@ const coreScatterTooltipFormatter = (params: any) => {
                 {{ garden.heritageLevel }}
               </td>
               <td class="px-4 py-3 text-sm">
-                <span
-                  :class="{
-                    'text-green-600': garden.openStatus === '开放',
-                    'text-yellow-600': garden.openStatus === '半开放',
-                    'text-red-600': garden.openStatus === '不开放',
-                  }"
-                >
+                <span :class="{
+                  'text-green-600': garden.openStatus === '开放',
+                  'text-yellow-600': garden.openStatus === '半开放',
+                  'text-red-600': garden.openStatus === '不开放',
+                }">
                   {{ garden.openStatus }}
                 </span>
               </td>

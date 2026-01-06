@@ -25,6 +25,11 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  title: undefined,
+  colors: undefined,
+  xAxisName: undefined,
+  yAxisName: undefined,
+  tooltipFormatter: undefined,
   height: '400px',
   loading: false,
   horizontal: false,
@@ -46,9 +51,9 @@ const chartOption = computed<EChartsOption>(() => {
   const option: EChartsOption = {
     title: props.title
       ? {
-          text: props.title,
-          left: 'center',
-        }
+        text: props.title,
+        left: 'center',
+      }
       : undefined,
     tooltip: {
       trigger: 'axis',
@@ -67,50 +72,50 @@ const chartOption = computed<EChartsOption>(() => {
     },
     xAxis: props.horizontal
       ? {
-          type: 'value',
-          name: props.xAxisName,
-          nameLocation: 'middle',
-          nameGap: xAxisNameGap,
-        }
+        type: 'value',
+        name: props.xAxisName,
+        nameLocation: 'middle',
+        nameGap: xAxisNameGap,
+      }
       : {
-          type: 'category',
-          data: categories,
-          name: props.xAxisName,
-          nameLocation: 'middle',
-          nameGap: xAxisNameGap,
-          axisLabel: {
-            interval: 0,
-            rotate: 0,
-            margin: axisLabelMargin,
-          },
+        type: 'category',
+        data: categories,
+        name: props.xAxisName,
+        nameLocation: 'middle',
+        nameGap: xAxisNameGap,
+        axisLabel: {
+          interval: 0,
+          rotate: 0,
+          margin: axisLabelMargin,
         },
+      },
     yAxis: props.horizontal
       ? {
-          type: 'category',
-          data: categories,
-          name: props.yAxisName,
-          axisLabel: {
-            interval: 0,
-          },
-        }
-      : {
-          type: 'value',
-          name: props.yAxisName,
+        type: 'category',
+        data: categories,
+        name: props.yAxisName,
+        axisLabel: {
+          interval: 0,
         },
+      }
+      : {
+        type: 'value',
+        name: props.yAxisName,
+      },
     series: [
       {
         type: 'bar',
         data: values,
         itemStyle: props.colors
           ? ({
-              color: (params: any) => {
-                const index = params.dataIndex;
-                if (props.colors && index !== undefined && index < props.colors.length) {
-                  return props.colors[index];
-                }
-                return '#5470C6';
-              },
-            } as any)
+            color: (params: any) => {
+              const index = params.dataIndex;
+              if (props.colors && index !== undefined && index < props.colors.length) {
+                return props.colors[index];
+              }
+              return '#5470C6';
+            },
+          } as any)
           : undefined,
         label: {
           show: props.data.length <= 15,
@@ -136,10 +141,5 @@ const handleChartClick = (params: any) => {
 </script>
 
 <template>
-  <BaseChart
-    :option="chartOption"
-    :height="props.height"
-    :loading="props.loading"
-    @chart-click="handleChartClick"
-  />
+  <BaseChart :option="chartOption" :height="props.height" :loading="props.loading" @chart-click="handleChartClick" />
 </template>

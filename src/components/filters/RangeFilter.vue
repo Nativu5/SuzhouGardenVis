@@ -15,6 +15,8 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  min: undefined,
+  max: undefined,
   minPlaceholder: '最小值',
   maxPlaceholder: '最大值',
   unit: '',
@@ -73,25 +75,17 @@ function clear() {
       <label class="block text-sm font-medium text-gray-700">
         {{ label }}
       </label>
-      <button
-        v-if="minValue || maxValue"
-        type="button"
-        class="text-xs text-blue-600 hover:text-blue-800"
-        @click="clear"
-      >
+      <button v-if="minValue || maxValue" type="button" class="text-xs text-blue-600 hover:text-blue-800"
+        @click="clear">
         清空
       </button>
     </div>
 
     <div class="flex items-center space-x-2">
       <div class="relative flex-1">
-        <input
-          type="number"
-          :value="minValue"
-          :placeholder="minPlaceholder"
+        <input type="number" :value="minValue" :placeholder="minPlaceholder"
           class="w-full rounded-lg border border-gray-300 px-3 py-2 pr-8 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-          @input="updateMin(($event.target as HTMLInputElement).value)"
-        />
+          @input="updateMin(($event.target as HTMLInputElement).value)" />
         <span v-if="unit" class="absolute right-3 top-2 text-xs text-gray-400">
           {{ unit }}
         </span>
@@ -100,13 +94,9 @@ function clear() {
       <span class="text-gray-400">-</span>
 
       <div class="relative flex-1">
-        <input
-          type="number"
-          :value="maxValue"
-          :placeholder="maxPlaceholder"
+        <input type="number" :value="maxValue" :placeholder="maxPlaceholder"
           class="w-full rounded-lg border border-gray-300 px-3 py-2 pr-8 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-          @input="updateMax(($event.target as HTMLInputElement).value)"
-        />
+          @input="updateMax(($event.target as HTMLInputElement).value)" />
         <span v-if="unit" class="absolute right-3 top-2 text-xs text-gray-400">
           {{ unit }}
         </span>

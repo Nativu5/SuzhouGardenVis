@@ -28,6 +28,10 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  title: undefined,
+  xAxisName: undefined,
+  yAxisName: undefined,
+  tooltipFormatter: undefined,
   height: '400px',
   loading: false,
   horizontal: false,
@@ -47,9 +51,9 @@ const chartOption = computed<EChartsOption>(() => {
   const option: any = {
     title: props.title
       ? {
-          text: props.title,
-          left: 'center',
-        }
+        text: props.title,
+        left: 'center',
+      }
       : undefined,
     tooltip: {
       trigger: 'axis',
@@ -60,10 +64,10 @@ const chartOption = computed<EChartsOption>(() => {
     },
     legend: props.showLegend
       ? {
-          data: props.series.map((s) => s.name),
-          top: props.title ? 35 : 10,
-          type: 'scroll',
-        }
+        data: props.series.map((s) => s.name),
+        top: props.title ? 35 : 10,
+        type: 'scroll',
+      }
       : undefined,
     // 与 ScatterChart 的左右留白对齐
     grid: {
@@ -75,33 +79,33 @@ const chartOption = computed<EChartsOption>(() => {
     },
     xAxis: props.horizontal
       ? {
-          type: 'value',
-          name: props.xAxisName,
-          nameLocation: 'middle',
-          nameGap: xAxisNameGap,
-        }
+        type: 'value',
+        name: props.xAxisName,
+        nameLocation: 'middle',
+        nameGap: xAxisNameGap,
+      }
       : {
-          type: 'category',
-          nameLocation: 'middle',
-          nameGap: xAxisNameGap,
-          data: props.categories,
-          name: props.xAxisName,
-          axisLabel: {
-            interval: 0,
-            rotate: 0,
-            margin: axisLabelMargin,
-          },
+        type: 'category',
+        nameLocation: 'middle',
+        nameGap: xAxisNameGap,
+        data: props.categories,
+        name: props.xAxisName,
+        axisLabel: {
+          interval: 0,
+          rotate: 0,
+          margin: axisLabelMargin,
         },
+      },
     yAxis: props.horizontal
       ? {
-          type: 'category',
-          data: props.categories,
-          name: props.yAxisName,
-        }
+        type: 'category',
+        data: props.categories,
+        name: props.yAxisName,
+      }
       : {
-          type: 'value',
-          name: props.yAxisName,
-        },
+        type: 'value',
+        name: props.yAxisName,
+      },
     series: props.series.map(
       (s) =>
         ({
@@ -111,8 +115,8 @@ const chartOption = computed<EChartsOption>(() => {
           data: s.data,
           itemStyle: s.color
             ? {
-                color: s.color,
-              }
+              color: s.color,
+            }
             : undefined,
           emphasis: {
             focus: 'series',
@@ -143,10 +147,5 @@ const handleChartClick = (params: any) => {
 </script>
 
 <template>
-  <BaseChart
-    :option="chartOption"
-    :height="props.height"
-    :loading="props.loading"
-    @chart-click="handleChartClick"
-  />
+  <BaseChart :option="chartOption" :height="props.height" :loading="props.loading" @chart-click="handleChartClick" />
 </template>
