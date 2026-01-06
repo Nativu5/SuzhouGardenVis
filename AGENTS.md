@@ -454,70 +454,7 @@
 **里程碑 7：**
 完成了区域统计雷达图、概览增强、地图高亮联动及打包体积优化。实现了行政区划数据加载与 Store 集成，创建了 RadarChart 组件展示区域综合指标（人口、面积、园林数量、开放率、可访问指数），并在概览模式中增强了园林密度与人均资源图表。实现了详情面板与地图的双向高亮联动，包括区县/园林高亮、自动视野缩放及聚合模式下的交互优化。修复了文保等级着色等 Bug，优化了 MapView 性能（移除深度代理）和图片懒加载策略。针对地图交互进行了深度优化，包括点击聚焦逻辑、聚合点点击处理及高亮状态保持。
 
-## 最近更新
+**后续增强功能：**
+- 在地图行政区遮罩上添加了美观的行政区名称标签（使用 AMap.Text），采用衬线字体和半透明文字阴影样式。标签在较大比例尺（缩放级别 ≤12）时显示，缩放较近时自动隐藏，与行政区遮罩显隐状态联动。
 
-- 新增 `docs/强化可视化叙事报告.md`，给出概览模式叙事强化方案（5 个场景、矩阵/散点/箱线图等新图表类型、数据衍生指标与实施步骤）。
-- 细化 `docs/强化可视化叙事报告.md` 的实施步骤，并为每个场景补充修改方案与页面文字说明。
-- **【进行中】基于报告方案强化概览模式叙事**：
-  - ✅ 新增图表组件：HeatmapMatrixChart（矩阵热力图）、ScatterChart（散点/气泡图）、BoxPlotChart（箱线图）
-  - ✅ 扩展数据处理服务：新增矩阵数据生成、箱线图数据生成、资源集中度计算等函数（chartDataProcessor.ts）
-  - ✅ 场景1强化完成（NarrativeScene1.vue）：
-    - 添加核心观点、阅读路径提示和关键结论条
-    - 新增区县×文保级别矩阵热力图
-    - 新增园林占比/面积占比比值条形图（集中度可视化）
-    - 新增核心区结构散点图（密度×高等级占比）
-    - 保留文保等级构成和世界遗产清单表
-  - ✅ 修复运行时错误：store.districts → store.districtData、totalGardens → gardenCount
-  - ✅ 修复 ECharts 导入问题：添加 ScatterChart、HeatmapChart、VisualMapComponent
-  - ✅ 修正文保等级构成图：改为区县×文保级别堆叠柱状图
-  - ✅ 场景2排版强化（NarrativeScene2.vue）：
-    - 添加核心观点、阅读路径提示
-    - 添加2个关键结论条（认定节奏、历史规模）
-    - 为所有图表添加注释说明
-    - 保持现有图表不变
-  - ✅ 场景3排版强化与图表替换（NarrativeScene3.vue）：
-    - 添加核心观点、阅读路径提示
-    - 添加3个关键结论条（权属差异、用途限制、空间公平）
-    - 将"区县人均开放资源"改为"区县公平性散点图"（X=开放率，Y=人均开放园林数，气泡=园林总数）
-    - 为所有图表添加注释说明
-    - 保持其他图表不变（桑基图、当前用途×开放、区县×开放、未开放清单）
-  - ✅ 场景4排版强化（NarrativeScene4.vue）：
-    - 添加核心观点："园林规模呈强烈长尾分布，少数大园林占据近半面积，开放园林在规模上明显占优"
-    - 添加阅读路径提示
-    - 添加2个关键结论条（资源集中度、规模与开放性）
-    - 为所有4个图表添加注释说明（面积区间分布、各区县平均面积、各区县总面积、建造年代平均面积）
-    - 保持现有图表不变
-  - ✅ 场景5新增（NarrativeScene5.vue）：
-    - 创建全新场景"保护状况与风险提示"
-    - 添加核心观点："保护状况为'中/差'的园林多数不开放，风险主要集中在少数区县与特定权属结构"
-    - 添加阅读路径提示
-    - 添加2个关键结论条（保护与开放关联、风险空间集中）
-    - 新增3个可视化元素：
-      - 保护状况×开放情况矩阵热力图
-      - 区县×保护状况堆叠柱状图
-      - 风险园林清单表格（保护状况为"中"或"差"）
-    - 新增数据处理函数：groupByDistrictAndProtectionStatus（chartDataProcessor.ts）
-    - 新增保护状况配色方案：PROTECTION_STATUS_COLORS（theme.ts）
-  - ✅ 更新 NarrativeSelector 组件：
-    - 扩展 NarrativeScene 类型定义，新增 'protection_risk'（types/index.ts）
-    - 在场景选项中添加第5个场景配置
-    - 更新 MainView 组件，集成 NarrativeScene5 渲染逻辑
-  - ✅ 修复柱状图横轴名称被裁切：将 xAxisName（如“区县”）固定放到坐标轴下方，并增加底部留白（BarChart/StackedBarChart）
-  - ✅ 调整柱状图 X 轴标签不旋转：固定 rotate=0，避免标签倾斜导致阅读负担
-  - ✅ 统一区县类图表排序：所有 X 轴为“区县”的图表按字典序排序
-  - ✅ 对齐图表外围留白：BarChart/StackedBarChart 的 grid（左右/底部）与 ScatterChart 对齐
-
-  - 新增：自动代码格式化与规范
-    - 新增 Prettier 配置（.prettierrc.json）与忽略（.prettierignore），启用 prettier-plugin-tailwindcss 进行 Tailwind 类名排序。
-    - 新增 ESLint 配置（.eslintrc.cjs）与忽略（.eslintignore），集成 Vue3 + TypeScript + eslint-config-prettier。
-    - 更新 package.json：新增脚本 `lint`、`lint:fix`、`format`，并加入相关 devDependencies。
-    - 新增 VS Code 工作区配置（.vscode/settings.json）：保存时自动格式化、保存时自动修复 ESLint；扩展推荐（.vscode/extensions.json）。
-
-## 下一步计划
-
-- 所有场景强化工作已完成 🎉
-- 运行依赖安装并验证格式化/规范：
-  1. 安装开发依赖（ESLint/Prettier/Tailwind 插件）
-  2. VS Code 安装推荐扩展（Prettier、ESLint、Volar、Tailwind）
-  3. 执行 `npm run format` 与 `npm run lint:fix` 验证生效
-  - 如需调整风格（单双引号、printWidth 等），可在 .prettierrc.json 中修改。
+**下一步工作：**

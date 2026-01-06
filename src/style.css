@@ -1,5 +1,14 @@
 @import 'tailwindcss';
 
+/* 行政区名称标签字体（子集化） */
+@font-face {
+  font-family: 'DistrictLabel';
+  src: url('/font/district-labels.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* 全局样式 */
 body {
   margin: 0;
