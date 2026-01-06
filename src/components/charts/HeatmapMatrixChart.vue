@@ -60,9 +60,9 @@ const chartOption = computed<EChartsOption>(() => {
   const option: EChartsOption = {
     title: props.title
       ? {
-        text: props.title,
-        left: 'center',
-      }
+          text: props.title,
+          left: 'center',
+        }
       : undefined,
     tooltip: {
       position: 'top',
@@ -168,5 +168,10 @@ const handleChartClick = (params: any) => {
 </script>
 
 <template>
-  <BaseChart :option="chartOption" :height="props.height" :loading="props.loading" @chart-click="handleChartClick" />
+  <BaseChart
+    :option="chartOption"
+    :height="props.height"
+    :loading="props.loading"
+    @chart-click="handleChartClick"
+  />
 </template>

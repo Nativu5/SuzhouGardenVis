@@ -10,6 +10,66 @@ function compareDistrictName(a: string, b: string): number {
 }
 
 /**
+ * 计算累积面积分布数据（按开放情况分组）
+ * 按面积从小到大排序，逐个累加，用于展示长尾分布特征
+ * 返回多个系列：全部、开放、不开放
+ * 所有系列的累积面积百分比均相对于全部园林的总面积计算
+ * 横轴使用单个园林的面积值
+ */
+export function calculateCumulativeAreaByOpenStatus(data: GardenData[]): {
+  name: string;
+  color?: string;
+  data: {
+    gardenName: string;
+    area: number;
+    cumulativePercent: number;
+  }[];
+}[] {
+  // 计算全部园林的总面积（作为统一的基准）
+  const globalTotalArea = data.reduce((sum, item) => sum + item.area, 0);
+
+  const calculateSeries = (
+    items: GardenData[],
+    seriesName: string,
+    color?: string,
+  ): {
+    name: string;
+    color?: string;
+    data: {
+      gardenName: string;
+      area: number;
+      cumulativePercent: number;
+    }[];
+  } => {
+    const sorted = [...items].sort((a, b) => a.area - b.area);
+    let cumulativeArea = 0;
+
+    return {
+      name: seriesName,
+      color,
+      data: sorted.map((item) => {
+        cumulativeArea += item.area;
+        return {
+          gardenName: item.name,
+          area: item.area,
+          // 累积面积占全部园林总面积的百分比
+          cumulativePercent: globalTotalArea > 0 ? (cumulativeArea / globalTotalArea) * 100 : 0,
+        };
+      }),
+    };
+  };
+
+  const openGardens = data.filter((item) => item.openStatus === '开放');
+  const closedGardens = data.filter((item) => item.openStatus === '不开放');
+
+  return [
+    calculateSeries(data, '全部', '#5470C6'),
+    calculateSeries(openGardens, '开放', '#91CC75'),
+    calculateSeries(closedGardens, '不开放', '#EE6666'),
+  ];
+}
+
+/**
  * 按区县分组统计园林数量
  */
 export function groupByDistrict(data: GardenData[]): { name: string; value: number }[] {

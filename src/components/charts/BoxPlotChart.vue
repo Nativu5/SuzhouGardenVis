@@ -92,9 +92,9 @@ const chartOption = computed<EChartsOption>(() => {
   const option: EChartsOption = {
     title: props.title
       ? {
-        text: props.title,
-        left: 'center',
-      }
+          text: props.title,
+          left: 'center',
+        }
       : undefined,
     tooltip: {
       trigger: 'item',

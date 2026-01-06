@@ -45,9 +45,9 @@ const chartOption = computed<EChartsOption>(() => {
   const option: any = {
     title: props.title
       ? {
-        text: props.title,
-        left: 'center',
-      }
+          text: props.title,
+          left: 'center',
+        }
       : undefined,
     tooltip: {
       trigger: 'axis',
@@ -57,10 +57,10 @@ const chartOption = computed<EChartsOption>(() => {
     },
     legend: props.showLegend
       ? {
-        data: props.series.map((s) => s.name),
-        top: props.title ? 35 : 10,
-        type: 'scroll',
-      }
+          data: props.series.map((s) => s.name),
+          top: props.title ? 35 : 10,
+          type: 'scroll',
+        }
       : undefined,
     xAxis: {
       type: 'category',
@@ -84,8 +84,8 @@ const chartOption = computed<EChartsOption>(() => {
           data: s.data,
           itemStyle: s.color
             ? {
-              color: s.color,
-            }
+                color: s.color,
+              }
             : undefined,
           emphasis: {
             focus: 'series',
@@ -114,5 +114,10 @@ const handleChartClick = (params: any) => {
 </script>
 
 <template>
-  <BaseChart :option="chartOption" :height="props.height" :loading="props.loading" @chart-click="handleChartClick" />
+  <BaseChart
+    :option="chartOption"
+    :height="props.height"
+    :loading="props.loading"
+    @chart-click="handleChartClick"
+  />
 </template>

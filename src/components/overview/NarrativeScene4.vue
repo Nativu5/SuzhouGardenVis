@@ -9,12 +9,14 @@ import { useGardenStore } from '@/stores/gardenStore';
 import HistogramChart from '@/components/charts/HistogramChart.vue';
 import BarChart from '@/components/charts/BarChart.vue';
 import BarLineChart from '@/components/charts/BarLineChart.vue';
+import CumulativeAreaChart from '@/components/charts/CumulativeAreaChart.vue';
 import MetricCard from './MetricCard.vue';
 import {
   groupByAreaRangeAndOpenStatus,
   groupAverageAreaByDistrict,
   groupAreaByDistrict,
   groupAverageAreaByEraCategory,
+  calculateCumulativeAreaByOpenStatus,
 } from '@/utils/chartDataProcessor';
 import { getOpenStatusColor, getEraCategoryColor } from '@/config/theme';
 
@@ -26,6 +28,11 @@ const data = computed(() => store.filteredData);
 // 面积 Top10 园林
 const top10Gardens = computed(() => {
   return [...data.value].sort((a, b) => b.area - a.area).slice(0, 10);
+});
+
+// 累积面积分布数据（按开放情况分组）
+const cumulativeAreaData = computed(() => {
+  return calculateCumulativeAreaByOpenStatus(data.value);
 });
 
 // 面积区间×开放情况分层统计
@@ -106,22 +113,19 @@ const keyInsights = computed(() => {
     <div class="mb-6">
       <h2 class="mb-2 text-2xl font-bold text-gray-900">规模结构与资源配置</h2>
       <div class="mb-4 text-sm text-gray-600">
-        <strong>核心观点：</strong
-        >园林规模呈强烈长尾分布，少数大园林占据近半面积，开放园林在规模上明显占优。
+        <strong>核心观点：</strong>园林规模呈显著长尾分布，资源高度集中于姑苏区与明清时期，Top10大园林贡献近半总面积。
       </div>
 
       <!-- 阅读路径提示 -->
       <div class="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800">
         <strong>阅读路径：</strong>
-        先看"面积区间分布"理解长尾结构，再看"Top10清单"识别大园林，最后查"区县/年代平均面积"理解地域/时代差异
+        先看"累积面积曲线"直观感受资源集中度，再看"面积区间分布"理解长尾结构，最后查"区县/年代平均面积"理解地域/时代差异
       </div>
     </div>
 
     <!-- 关键结论条 -->
     <div class="mb-6 grid grid-cols-2 gap-4">
-      <div
-        class="bg-linear-to-r rounded-lg border border-orange-200 from-orange-50 to-orange-100 p-4"
-      >
+      <div class="bg-linear-to-r rounded-lg border border-orange-200 from-orange-50 to-orange-100 p-4">
         <div class="mb-1 text-xs font-medium text-orange-600">资源集中度</div>
         <div class="text-lg font-bold text-orange-800">
           Top10 园林占总面积约 {{ keyInsights.top10Percentage }}%，呈显著集中
@@ -148,16 +152,18 @@ const keyInsights = computed(() => {
 
     <!-- 图表网格 -->
     <div class="mb-6 grid grid-cols-2 gap-6">
+      <!-- 累积面积分布曲线（按开放情况分组） -->
+      <div class="col-span-2 rounded-lg border border-gray-200 bg-white p-4">
+        <CumulativeAreaChart title="累积面积分布（按开放情况分组）" :series-data="cumulativeAreaData" height="350px" />
+        <div class="mt-2 text-xs text-gray-500">
+          注：横轴为单园林面积，纵轴为累积面积占比；曲线右侧急剧上升表明大面积园林贡献显著；超过53000㎡部分采用压缩显示。
+        </div>
+      </div>
+
       <!-- 面积区间直方图（按开放情况分层） -->
       <div class="col-span-2 rounded-lg border border-gray-200 bg-white p-4">
-        <HistogramChart
-          title="面积区间分布（按开放情况分层）"
-          :intervals="areaOpenData.intervals"
-          :series="areaOpenData.series"
-          x-axis-name="面积区间 (㎡)"
-          y-axis-name="园林数量"
-          height="400px"
-        />
+        <HistogramChart title="面积区间分布（按开放情况分层）" :intervals="areaOpenData.intervals" :series="areaOpenData.series"
+          x-axis-name="面积区间 (㎡)" y-axis-name="园林数量" height="400px" />
         <div class="mt-2 text-xs text-gray-500">
           注：呈显著长尾分布，小面积园林数量多，大面积园林稀少；开放园林在各区间均有分布
         </div>
@@ -165,34 +171,18 @@ const keyInsights = computed(() => {
 
       <!-- 区县总面积与平均面积组合图 -->
       <div class="rounded-lg border border-gray-200 bg-white p-4">
-        <BarLineChart
-          title="各区县总面积与平均面积"
-          :bar-data="totalAreaByDistrict"
-          :line-data="avgAreaByDistrict"
-          bar-name="总面积"
-          line-name="平均面积"
-          bar-color="#5470C6"
-          line-color="#EE6666"
-          x-axis-name="区县"
-          y-axis-left-name="总面积 (㎡)"
-          y-axis-right-name="平均面积 (㎡)"
-          height="400px"
-        />
+        <BarLineChart title="各区县总面积与平均面积" :bar-data="totalAreaByDistrict" :line-data="avgAreaByDistrict" bar-name="总面积"
+          line-name="平均面积" bar-color="#5470C6" line-color="#EE6666" x-axis-name="区县" y-axis-left-name="总面积 (㎡)"
+          y-axis-right-name="平均面积 (㎡)" height="400px" />
         <div class="mt-2 text-xs text-gray-500">
-          注：姑苏区总面积与平均面积均占主导地位，兼具数量与规模优势；柱状图表示总面积（左轴），折线表示平均面积（右轴）
+          注：姑苏区总面积与平均面积均占主导地位，兼具数量与规模优势；左侧柱状图表示总面积（左轴），右侧柱状图表示平均面积（右轴）
         </div>
       </div>
 
       <!-- 建造年代平均面积柱状图 -->
       <div class="rounded-lg border border-gray-200 bg-white p-4">
-        <BarChart
-          title="建造年代平均面积"
-          :data="avgAreaByEra.data"
-          :colors="avgAreaByEra.colors"
-          x-axis-name="建造年代"
-          y-axis-name="平均面积 (㎡)"
-          height="400px"
-        />
+        <BarChart title="建造年代平均面积" :data="avgAreaByEra.data" :colors="avgAreaByEra.colors" x-axis-name="建造年代"
+          y-axis-name="平均面积 (㎡)" height="400px" />
         <div class="mt-2 text-xs text-gray-500">
           注：明代与宋代及以前园林平均面积更大，体现历史园林的规模优势
         </div>
@@ -206,34 +196,22 @@ const keyInsights = computed(() => {
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-              >
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 排名
               </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-              >
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 名称
               </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-              >
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 面积 (㎡)
               </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-              >
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 区县
               </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-              >
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 建造年代
               </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-              >
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 开放情况
               </th>
             </tr>
@@ -256,13 +234,11 @@ const keyInsights = computed(() => {
                 {{ garden.constructionPeriod }}
               </td>
               <td class="px-4 py-3 text-sm">
-                <span
-                  :class="{
-                    'text-green-600': garden.openStatus === '开放',
-                    'text-yellow-600': garden.openStatus === '半开放',
-                    'text-red-600': garden.openStatus === '不开放',
-                  }"
-                >
+                <span :class="{
+                  'text-green-600': garden.openStatus === '开放',
+                  'text-yellow-600': garden.openStatus === '半开放',
+                  'text-red-600': garden.openStatus === '不开放',
+                }">
                   {{ garden.openStatus }}
                 </span>
               </td>
