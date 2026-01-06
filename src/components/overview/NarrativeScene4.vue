@@ -12,13 +12,13 @@ import BarLineChart from '@/components/charts/BarLineChart.vue';
 import CumulativeAreaChart from '@/components/charts/CumulativeAreaChart.vue';
 import MetricCard from './MetricCard.vue';
 import {
-  groupByAreaRangeAndOpenStatus,
+  groupByAreaRangeAndOwnership,
   groupAverageAreaByDistrict,
   groupAreaByDistrict,
   groupAverageAreaByEraCategory,
   calculateCumulativeAreaByOpenStatus,
 } from '@/utils/chartDataProcessor';
-import { getOpenStatusColor, getEraCategoryColor } from '@/config/theme';
+import { getOwnershipTypeColor, getEraCategoryColor } from '@/config/theme';
 
 const store = useGardenStore();
 
@@ -35,14 +35,14 @@ const cumulativeAreaData = computed(() => {
   return calculateCumulativeAreaByOpenStatus(data.value);
 });
 
-// 面积区间×开放情况分层统计
-const areaOpenData = computed(() => {
-  const result = groupByAreaRangeAndOpenStatus(data.value);
+// 面积区间×权属性质分层统计
+const areaOwnershipData = computed(() => {
+  const result = groupByAreaRangeAndOwnership(data.value);
   return {
     intervals: result.intervals,
     series: result.series.map((s) => ({
       ...s,
-      color: getOpenStatusColor(s.name),
+      color: getOwnershipTypeColor(s.name),
     })),
   };
 });
@@ -119,7 +119,7 @@ const keyInsights = computed(() => {
       <!-- 阅读路径提示 -->
       <div class="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800">
         <strong>阅读路径：</strong>
-        先看"累积面积曲线"直观感受资源集中度，再看"面积区间分布"理解长尾结构，最后查"区县/年代平均面积"理解地域/时代差异
+        先看"累积面积曲线"直观感受资源集中度，再看"面积区间分布（权属）"理解结构差异，最后查"区县/年代平均面积"理解地域/时代差异
       </div>
     </div>
 
@@ -160,12 +160,12 @@ const keyInsights = computed(() => {
         </div>
       </div>
 
-      <!-- 面积区间直方图（按开放情况分层） -->
+      <!-- 面积区间直方图（按权属性质分层） -->
       <div class="col-span-2 rounded-lg border border-gray-200 bg-white p-4">
-        <HistogramChart title="面积区间分布（按开放情况分层）" :intervals="areaOpenData.intervals" :series="areaOpenData.series"
+        <HistogramChart title="面积区间分布（按权属性质分层）" :intervals="areaOwnershipData.intervals" :series="areaOwnershipData.series"
           x-axis-name="面积区间 (㎡)" y-axis-name="园林数量" height="400px" />
         <div class="mt-2 text-xs text-gray-500">
-          注：呈显著长尾分布，小面积园林数量多，大面积园林稀少；开放园林在各区间均有分布
+          注：呈显著长尾分布，小面积园林数量多，大面积园林稀少；对比不同权属在各区间的规模结构差异
         </div>
       </div>
 

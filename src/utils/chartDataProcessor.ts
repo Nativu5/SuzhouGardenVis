@@ -407,6 +407,63 @@ export function groupByAreaRangeAndOpenStatus(data: GardenData[]): {
 }
 
 /**
+ * 按面积区间和权属性质分层统计
+ */
+export function groupByAreaRangeAndOwnership(data: GardenData[]): {
+  intervals: string[];
+  series: { name: string; data: number[] }[];
+} {
+  const rangeSet = new Set<string>();
+  const ownershipSet = new Set<string>();
+  const countMap = new Map<string, number>();
+
+  data.forEach((item) => {
+    rangeSet.add(item.areaRange);
+    ownershipSet.add(item.ownershipType);
+
+    const key = `${item.areaRange}|${item.ownershipType}`;
+    const count = countMap.get(key) || 0;
+    countMap.set(key, count + 1);
+  });
+
+  // 面积区间按大小排序（与 dataLoader.ts 中 AREA_RANGES 定义一致，统一跨度 5000 ㎡）
+  const rangeOrder = [
+    '0-5000',
+    '5000-10000',
+    '10000-15000',
+    '15000-20000',
+    '20000-25000',
+    '25000以上',
+    '未知',
+  ];
+  const ranges = Array.from(rangeSet).sort((a, b) => rangeOrder.indexOf(a) - rangeOrder.indexOf(b));
+
+  // 权属性质排序（基于清洗后的实际分类）
+  const ownershipOrder = ['国有', '私有', '企业', '宗教产', '未知'];
+  const ownerships = Array.from(ownershipSet).sort((a, b) => {
+    const indexA = ownershipOrder.indexOf(a);
+    const indexB = ownershipOrder.indexOf(b);
+    if (indexA !== indexB) {
+      return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
+    }
+    return a.localeCompare(b, 'zh-CN');
+  });
+
+  const series = ownerships.map((ownership) => ({
+    name: ownership,
+    data: ranges.map((range) => {
+      const key = `${range}|${ownership}`;
+      return countMap.get(key) || 0;
+    }),
+  }));
+
+  return {
+    intervals: ranges,
+    series,
+  };
+}
+
+/**
  * 按区县统计平均面积
  */
 export function groupAverageAreaByDistrict(data: GardenData[]): { name: string; value: number }[] {
