@@ -56,9 +56,19 @@ const stats = computed(() => gardenStore.statistics)
 
       <!-- 提示信息 -->
       <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
-        <p class="text-xs text-blue-700 leading-relaxed">
-          在概览模式下，您可以通过叙事场景切换来查看不同维度的数据洞察。
-        </p>
+        <div class="flex items-start space-x-2.5">
+          <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+          </svg>
+          <div class="flex-1 space-y-1.5">
+            <p class="text-xs text-gray-700 leading-relaxed">
+              点击右上角按钮可在<span class="font-medium text-blue-600">概览模式</span>和<span class="font-medium text-blue-600">探索模式</span>之间切换
+            </p>
+            <p class="text-xs text-gray-700 leading-relaxed">
+              切换<span class="font-medium text-green-600">叙事场景</span>可从不同视角探索园林数据的深层洞察
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 

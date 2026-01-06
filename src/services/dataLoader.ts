@@ -22,15 +22,15 @@ const ERA_CATEGORIES: EraCategoryConfig[] = [
 ]
 
 /**
- * 面积区间配置（单位：㎡）
+ * 面积区间配置（单位：㎡，统一跨度 5000 ㎡）
  */
 const AREA_RANGES: AreaRangeConfig[] = [
-  { label: '0-1000', min: 0, max: 1000 },
-  { label: '1000-3000', min: 1000, max: 3000 },
-  { label: '3000-5000', min: 3000, max: 5000 },
+  { label: '0-5000', min: 0, max: 5000 },
   { label: '5000-10000', min: 5000, max: 10000 },
-  { label: '10000-20000', min: 10000, max: 20000 },
-  { label: '20000以上', min: 20000, max: Infinity }
+  { label: '10000-15000', min: 10000, max: 15000 },
+  { label: '15000-20000', min: 15000, max: 20000 },
+  { label: '20000-25000', min: 20000, max: 25000 },
+  { label: '25000以上', min: 25000, max: Infinity }
 ]
 
 // ==================== 数据清洗函数 ====================

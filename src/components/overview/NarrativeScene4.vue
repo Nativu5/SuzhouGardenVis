@@ -8,6 +8,7 @@ import { computed } from 'vue'
 import { useGardenStore } from '@/stores/gardenStore'
 import HistogramChart from '@/components/charts/HistogramChart.vue'
 import BarChart from '@/components/charts/BarChart.vue'
+import BarLineChart from '@/components/charts/BarLineChart.vue'
 import MetricCard from './MetricCard.vue'
 import {
   groupByAreaRangeAndOpenStatus,
@@ -17,7 +18,6 @@ import {
 } from '@/utils/chartDataProcessor'
 import {
   getOpenStatusColor,
-  getDistrictColor,
   getEraCategoryColor
 } from '@/config/theme'
 
@@ -47,20 +47,12 @@ const areaOpenData = computed(() => {
 
 // 按区县统计平均面积
 const avgAreaByDistrict = computed(() => {
-  const result = groupAverageAreaByDistrict(data.value)
-  return {
-    data: result,
-    colors: result.map(item => getDistrictColor(item.name))
-  }
+  return groupAverageAreaByDistrict(data.value)
 })
 
 // 按区县统计总面积
 const totalAreaByDistrict = computed(() => {
-  const result = groupAreaByDistrict(data.value)
-  return {
-    data: result,
-    colors: result.map(item => getDistrictColor(item.name))
-  }
+  return groupAreaByDistrict(data.value)
 })
 
 // 按建造年代统计平均面积
@@ -188,33 +180,23 @@ const keyInsights = computed(() => {
         </div>
       </div>
 
-      <!-- 区县平均面积柱状图 -->
+      <!-- 区县总面积与平均面积组合图 -->
       <div class="bg-white rounded-lg border border-gray-200 p-4">
-        <BarChart
-          title="各区县平均面积"
-          :data="avgAreaByDistrict.data"
-          :colors="avgAreaByDistrict.colors"
+        <BarLineChart
+          title="各区县总面积与平均面积"
+          :bar-data="totalAreaByDistrict"
+          :line-data="avgAreaByDistrict"
+          bar-name="总面积"
+          line-name="平均面积"
+          bar-color="#5470C6"
+          line-color="#EE6666"
           x-axis-name="区县"
-          y-axis-name="平均面积 (㎡)"
+          y-axis-left-name="总面积 (㎡)"
+          y-axis-right-name="平均面积 (㎡)"
           height="400px"
         />
         <div class="text-xs text-gray-500 mt-2">
-          注：姑苏区园林平均面积显著高于其他区县，反映核心区大园林集中
-        </div>
-      </div>
-
-      <!-- 区县总面积柱状图 -->
-      <div class="bg-white rounded-lg border border-gray-200 p-4">
-        <BarChart
-          title="各区县总面积"
-          :data="totalAreaByDistrict.data"
-          :colors="totalAreaByDistrict.colors"
-          x-axis-name="区县"
-          y-axis-name="总面积 (㎡)"
-          height="400px"
-        />
-        <div class="text-xs text-gray-500 mt-2">
-          注：姑苏区总面积占主导地位，兼具数量与规模优势
+          注：姑苏区总面积与平均面积均占主导地位，兼具数量与规模优势；柱状图表示总面积（左轴），折线表示平均面积（右轴）
         </div>
       </div>
 

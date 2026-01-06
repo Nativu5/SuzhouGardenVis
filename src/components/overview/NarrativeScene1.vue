@@ -91,7 +91,7 @@ const coreDistrictScatter = computed(() => {
         x: district.gardenDensity,
         y: highLevelRatio,
         size: district.gardenCount,
-        color: getOpenStatusColor('开放'),
+        color: getDistrictColor(district.name),
         category: district.name,
         openRate: district.openRate
       }

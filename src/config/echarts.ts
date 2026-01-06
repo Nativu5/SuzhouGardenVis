@@ -6,7 +6,7 @@
 import * as echarts from 'echarts/core'
 
 // 导入图表类型
-import { BarChart, SankeyChart, RadarChart, ScatterChart, HeatmapChart } from 'echarts/charts'
+import { BarChart, SankeyChart, RadarChart, ScatterChart, HeatmapChart, LineChart } from 'echarts/charts'
 
 // 导入组件
 import {
@@ -29,6 +29,7 @@ echarts.use([
   RadarChart,
   ScatterChart,
   HeatmapChart,
+  LineChart,
 
   // 组件
   TitleComponent,

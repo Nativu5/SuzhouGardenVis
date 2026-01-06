@@ -319,7 +319,8 @@ export function groupByAreaRangeAndOpenStatus(data: GardenData[]): {
     countMap.set(key, count + 1)
   })
 
-  const rangeOrder = ['< 1000', '1000-5000', '5000-10000', '10000-50000', '> 50000']
+  // 面积区间按大小排序（与 dataLoader.ts 中 AREA_RANGES 定义一致，统一跨度 5000 ㎡）
+  const rangeOrder = ['0-5000', '5000-10000', '10000-15000', '15000-20000', '20000-25000', '25000以上', '未知']
   const ranges = Array.from(rangeSet).sort((a, b) => rangeOrder.indexOf(a) - rangeOrder.indexOf(b))
   const statuses = Array.from(statusSet).sort()
 
@@ -630,8 +631,16 @@ export function generateProtectionOpenStatusMatrix(data: GardenData[]): {
     protectionTotalMap.set(protection, (protectionTotalMap.get(protection) || 0) + 1)
   })
 
-  const protections = Array.from(protectionSet).sort()
-  const statuses = Array.from(statusSet).sort()
+  // 自定义排序：横轴保护状况（差、中、好），纵轴开放情况（开放、预约开放、不开放）
+  const protectionOrder = ['差', '中', '好', '未知']
+  const openStatusOrder = ['不开放','预约开放', '开放']
+
+  const protections = Array.from(protectionSet).sort((a, b) =>
+    protectionOrder.indexOf(a) - protectionOrder.indexOf(b)
+  )
+  const statuses = Array.from(statusSet).sort((a, b) =>
+    openStatusOrder.indexOf(a) - openStatusOrder.indexOf(b)
+  )
 
   const matrixData = protections.flatMap(protection =>
     statuses.map(status => {

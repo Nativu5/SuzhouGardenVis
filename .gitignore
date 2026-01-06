@@ -23,6 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.claude/
 
 # Python-generated files
 __pycache__/
