@@ -26,6 +26,7 @@ const emit = defineEmits<{
 
 const chartRef = ref<HTMLDivElement>();
 let chartInstance: echarts.ECharts | null = null;
+let resizeObserver: ResizeObserver | null = null;
 
 // 初始化图表
 const initChart = () => {
@@ -98,7 +99,14 @@ watch(
 
 onMounted(() => {
   initChart();
-  window.addEventListener('resize', handleResize);
+
+  // 使用 ResizeObserver 监听容器尺寸变化（解决右侧面板切换导致的宽度问题）
+  if (chartRef.value) {
+    resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+    resizeObserver.observe(chartRef.value);
+  }
 
   if (props.loading) {
     chartInstance?.showLoading();
@@ -106,7 +114,10 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', handleResize);
+  if (resizeObserver) {
+    resizeObserver.disconnect();
+    resizeObserver = null;
+  }
   if (chartInstance) {
     chartInstance.dispose();
     chartInstance = null;
