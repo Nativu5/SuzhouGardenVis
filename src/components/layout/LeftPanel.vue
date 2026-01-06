@@ -42,7 +42,7 @@ const stats = computed(() => gardenStore.statistics);
       <div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
         <div class="flex items-start space-x-2.5">
           <svg
-            class="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500"
+            class="mt-0.5 h-4 w-4 shrink-0 text-blue-500"
             fill="currentColor"
             viewBox="0 0 20 20"
           >

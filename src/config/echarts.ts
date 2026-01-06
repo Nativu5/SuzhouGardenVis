@@ -13,6 +13,7 @@ import {
   ScatterChart,
   HeatmapChart,
   LineChart,
+  TreemapChart,
 } from 'echarts/charts';
 
 // 导入组件
@@ -23,6 +24,7 @@ import {
   LegendComponent,
   DataZoomComponent,
   VisualMapComponent,
+  GraphicComponent,
 } from 'echarts/components';
 
 // 导入渲染器
@@ -37,6 +39,7 @@ echarts.use([
   ScatterChart,
   HeatmapChart,
   LineChart,
+  TreemapChart,
 
   // 组件
   TitleComponent,
@@ -45,6 +48,7 @@ echarts.use([
   LegendComponent,
   DataZoomComponent,
   VisualMapComponent,
+  GraphicComponent,
 
   // 渲染器
   CanvasRenderer,

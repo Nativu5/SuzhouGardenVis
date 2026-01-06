@@ -997,10 +997,7 @@ defineExpose({
     </div>
 
     <!-- 地图控件：聚合/散点切换 & 行政区遮罩切换 -->
-    <div
-      v-if="!isLoading && !loadError"
-      class="absolute right-4 top-4 z-[1000] flex flex-col gap-2"
-    >
+    <div v-if="!isLoading && !loadError" class="z-1000 absolute right-4 top-4 flex flex-col gap-2">
       <button
         class="rounded-lg px-4 py-2 text-sm font-medium shadow-lg transition-colors"
         :style="{

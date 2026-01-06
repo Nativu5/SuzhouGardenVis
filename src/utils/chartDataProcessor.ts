@@ -512,6 +512,89 @@ export function groupAverageAreaByEraCategory(
     });
 }
 
+type EraTreemapNode = {
+  name: string;
+  value: number;
+  children?: EraTreemapNode[];
+  meta?: {
+    nodeType: 'era' | 'garden' | 'others';
+    era?: string;
+    district?: string;
+    count?: number;
+    percentage?: string;
+  };
+};
+
+/**
+ * 构建建造年代面积 Treemap 数据（每个朝代 Top N + 其他）
+ */
+export function buildEraAreaTreemap(data: GardenData[], topN: number = 3): EraTreemapNode[] {
+  const eraMap = new Map<string, GardenData[]>();
+  let totalArea = 0;
+
+  data.forEach((item) => {
+    const era = item.eraCategory || '未知';
+    const list = eraMap.get(era) || [];
+    list.push(item);
+    eraMap.set(era, list);
+    totalArea += item.area;
+  });
+
+  const eraOrder = ['宋代及以前', '元代', '明代', '清代', '民国', '现代', '未知', '不详'];
+  const eras = Array.from(eraMap.keys()).sort((a, b) => {
+    const indexA = eraOrder.indexOf(a);
+    const indexB = eraOrder.indexOf(b);
+    return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
+  });
+
+  return eras
+    .map((era) => {
+      const gardens = eraMap.get(era) || [];
+      const eraTotalArea = gardens.reduce((sum, item) => sum + item.area, 0);
+      const sorted = [...gardens].sort((a, b) => b.area - a.area);
+      const topGardens = sorted.slice(0, topN);
+      const restGardens = sorted.slice(topN);
+
+      const children: EraTreemapNode[] = topGardens.map((garden) => ({
+        name: garden.name,
+        value: garden.area,
+        meta: {
+          nodeType: 'garden',
+          era,
+          district: garden.district,
+          percentage: eraTotalArea > 0 ? calculatePercentage(garden.area, eraTotalArea) : '0%',
+        },
+      }));
+
+      const restArea = restGardens.reduce((sum, item) => sum + item.area, 0);
+      if (restGardens.length > 0 && restArea > 0) {
+        children.push({
+          name: '其他',
+          value: restArea,
+          meta: {
+            nodeType: 'others',
+            era,
+            count: restGardens.length,
+            percentage: eraTotalArea > 0 ? calculatePercentage(restArea, eraTotalArea) : '0%',
+          },
+        });
+      }
+
+      return {
+        name: era,
+        value: eraTotalArea,
+        children,
+        meta: {
+          nodeType: 'era' as const,
+          era,
+          count: gardens.length,
+          percentage: totalArea > 0 ? calculatePercentage(eraTotalArea, totalArea) : '0%',
+        },
+      };
+    })
+    .filter((node) => node.value > 0);
+}
+
 /**
  * ============================================
  * Tooltip 辅助函数
