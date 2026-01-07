@@ -268,7 +268,7 @@ const createDistrictLabels = (geojsonData: any) => {
       anchor: 'center',
       style: {
         'font-size': '18px',
-        'font-weight': '500',
+        'font-weight': '700',
         'font-family': '"DistrictLabel", "Source Han Serif SC", "Noto Serif SC", serif',
         color: 'rgba(31, 41, 55, 0.9)', // gray-800 with transparency
         'text-shadow': `
@@ -957,14 +957,10 @@ defineExpose({
     <div ref="mapContainer" class="h-full w-full" />
 
     <!-- 加载中提示 -->
-    <div
-      v-if="isLoading"
-      class="absolute inset-0 z-10 flex items-center justify-center bg-white/80"
-    >
+    <div v-if="isLoading" class="absolute inset-0 z-10 flex items-center justify-center bg-white/80">
       <div class="text-center">
         <div
-          class="inline-block h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"
-        />
+          class="inline-block h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
         <p class="mt-4 text-gray-600">地图加载中...</p>
       </div>
     </div>
@@ -972,25 +968,14 @@ defineExpose({
     <!-- 加载失败提示 -->
     <div v-if="loadError" class="absolute inset-0 z-10 flex items-center justify-center bg-white">
       <div class="max-w-md px-4 text-center">
-        <svg
-          class="mx-auto mb-4 h-16 w-16 text-red-500"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
+        <svg class="mx-auto mb-4 h-16 w-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <p class="mb-2 text-lg font-medium text-gray-900">地图加载失败</p>
         <p class="mb-4 text-sm text-gray-600">{{ loadError }}</p>
-        <button
-          class="rounded-lg bg-primary-500 px-4 py-2 text-white transition-colors hover:bg-primary-600"
-          @click="initMap"
-        >
+        <button class="rounded-lg bg-primary-500 px-4 py-2 text-white transition-colors hover:bg-primary-600"
+          @click="initMap">
           重新加载
         </button>
       </div>
@@ -998,27 +983,19 @@ defineExpose({
 
     <!-- 地图控件：聚合/散点切换 & 行政区遮罩切换 -->
     <div v-if="!isLoading && !loadError" class="z-1000 absolute right-4 top-4 flex flex-col gap-2">
-      <button
-        class="rounded-lg px-4 py-2 text-sm font-medium shadow-lg transition-colors"
-        :style="{
-          backgroundColor: isClusterMode ? '#0ea5e9' : '#ffffff',
-          color: isClusterMode ? '#ffffff' : '#374151',
-          border: isClusterMode ? 'none' : '1px solid #d1d5db',
-        }"
-        @click="toggleClusterMode"
-      >
+      <button class="rounded-lg px-4 py-2 text-sm font-medium shadow-lg transition-colors" :style="{
+        backgroundColor: isClusterMode ? '#0ea5e9' : '#ffffff',
+        color: isClusterMode ? '#ffffff' : '#374151',
+        border: isClusterMode ? 'none' : '1px solid #d1d5db',
+      }" @click="toggleClusterMode">
         {{ isClusterMode ? '聚合模式' : '散点模式' }}
       </button>
 
-      <button
-        class="rounded-lg px-4 py-2 text-sm font-medium shadow-lg transition-colors"
-        :style="{
-          backgroundColor: isShowDistrictMask ? '#0ea5e9' : '#ffffff',
-          color: isShowDistrictMask ? '#ffffff' : '#374151',
-          border: isShowDistrictMask ? 'none' : '1px solid #d1d5db',
-        }"
-        @click="toggleDistrictMask"
-      >
+      <button class="rounded-lg px-4 py-2 text-sm font-medium shadow-lg transition-colors" :style="{
+        backgroundColor: isShowDistrictMask ? '#0ea5e9' : '#ffffff',
+        color: isShowDistrictMask ? '#ffffff' : '#374151',
+        border: isShowDistrictMask ? 'none' : '1px solid #d1d5db',
+      }" @click="toggleDistrictMask">
         {{ isShowDistrictMask ? '显示区域' : '隐藏区域' }}
       </button>
     </div>
